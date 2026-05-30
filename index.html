@@ -31,32 +31,21 @@
 
   .emoji-top { font-size: 2.4rem; display: block; margin-bottom: 2px; }
   h1 { font-size: 1.6rem; font-weight: 800; color: #1a0e08; line-height: 1.2; }
-  .sub { font-size: 0.95rem; color: #777; margin-top: 4px; }
+  .sub { font-size: 0.95rem; color: #777; margin-top: 4px; line-height: 1.5; }
   .divider { height: 1px; background: #efebe6; margin: 20px 0; }
 
   .wo-group { margin-bottom: 10px; }
   .wo-option {
-    padding: 16px;
-    border: 1px solid #efebe6;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
+    padding: 16px; border: 1px solid #efebe6; border-radius: 16px;
+    cursor: pointer; transition: all 0.2s; position: relative;
   }
   .wo-option:hover { border-color: #d4a94a; }
   .wo-option input[type="radio"] { display: none; }
   .wo-option:has(input:checked) { border-color: #b8944a; background: #fdfaf5; }
   .wo-option:has(input:checked)::after {
-    content: '✓';
-    position: absolute;
-    left: 14px;
-    top: 14px;
-    background: #b8944a;
-    color: #fff;
-    width: 22px; height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center; justify-content: center;
+    content: '✓'; position: absolute; left: 14px; top: 14px;
+    background: #b8944a; color: #fff; width: 22px; height: 22px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
     font-size: 0.75rem; font-weight: 700;
   }
   .wo-title { font-weight: 700; font-size: 1rem; color: #1a0e08; }
@@ -75,7 +64,9 @@
   }
   .price-tag strong { font-size: 1.2rem; color: #1a0e08; }
 
+  .section-title { font-weight: 700; font-size: 0.95rem; color: #1a0e08; margin: 16px 0 8px; }
   label { font-weight: 600; font-size: 0.92rem; color: #333; display: block; margin-bottom: 6px; margin-top: 4px; }
+
   input, select {
     width: 100%; padding: 14px 16px; border: 1px solid #e5dfd8; border-radius: 14px;
     font-size: 1rem; font-family: inherit; background: #faf8f5;
@@ -83,20 +74,40 @@
   }
   input:focus, select:focus { outline: none; border-color: #b8944a; background: #fff; }
 
-  .section-title {
-    font-weight: 700; font-size: 0.95rem; color: #1a0e08; margin: 16px 0 8px;
+  .date-block {
+    background: #faf8f5; border: 1px solid #e5dfd8; border-radius: 16px;
+    padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; position: relative;
+  }
+  .date-block:hover { border-color: #d4a94a; }
+  .date-block input[type="radio"] { display: none; }
+  .date-block:has(input:checked) { border-color: #b8944a; background: #fdfaf5; }
+  .date-block:has(input:checked)::after {
+    content: '✓'; position: absolute; left: 14px; top: 14px;
+    background: #b8944a; color: #fff; width: 22px; height: 22px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700;
+  }
+  .date-day { font-weight: 700; font-size: 1.05rem; color: #1a0e08; }
+  .date-time { font-size: 0.9rem; color: #b8944a; font-weight: 600; margin-top: 2px; }
+
+  .no-date {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    padding: 14px 16px; border-radius: 14px;
+    font-size: 0.92rem; color: #555; transition: background 0.2s;
+  }
+  .no-date:hover { background: #f5f1ec; }
+  .no-date input[type="checkbox"] {
+    width: 18px; height: 18px; margin: 0; accent-color: #8b6914;
   }
 
-  .inline-group {
-    display: flex; gap: 10px; margin-bottom: 10px;
-  }
-  .inline-group select, .inline-group input {
-    margin-bottom: 0;
+  .location-note {
+    font-size: 0.82rem; color: #999; text-align: center; margin: 12px 0 0;
+    line-height: 1.5;
   }
 
   button {
     width: 100%; padding: 16px; background: #1a0e08; color: #f5f0eb;
-    border: none; border-radius: 14px; font-size: 1.05rem; font-weight: 700;
+    border: none; border-radius: 14px; font-size: 1rem; font-weight: 700;
     cursor: pointer; transition: background 0.2s; font-family: inherit; margin-top: 8px;
   }
   button:hover { background: #2c1a10; }
@@ -118,7 +129,7 @@
 <div class="card" id="card">
   <span class="emoji-top">☕️</span>
   <h1>סדנת קפה<br>בחסבון</h1>
-  <div class="sub">ממלאים פרטים ואחזור עם אישור</div>
+  <div class="sub">125 שנה למתחם, ויש קפה חדש באוויר</div>
 
   <div class="divider"></div>
 
@@ -146,33 +157,21 @@
       </div>
     </div>
 
-    <div class="section-title">בוחרים תאריך</div>
+    <div class="section-title">בוחרים מועד</div>
 
-    <div class="inline-group">
-      <select name="date" style="flex:1;" required>
-        <option value="">תאריך</option>
-        <option value="2026-06-12">שישי 12.6 — בוקר</option>
-        <option value="2026-06-13">שבת 13.6 — ערב</option>
-        <option value="2026-06-19">שישי 19.6 — בוקר</option>
-      </select>
-      <select name="time" style="flex:1;">
-        <option value="">שעה</option>
-        <option value="10:00">10:00</option>
-        <option value="11:30">11:30</option>
-        <option value="17:00">17:00</option>
-        <option value="19:00">19:00</option>
-      </select>
-    </div>
+    <label class="date-block" for="d_12_6">
+      <input type="radio" name="date" id="d_12_6" value="שישי 12.6 11:00" required>
+      <div class="date-day">שישי 12.6</div>
+      <div class="date-time">11:00</div>
+    </label>
 
-    <div style="text-align:center;margin:4px 0 10px;">
-      <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;font-size:0.9rem;">
-        <input type="checkbox" name="no_date" value="yes" onchange="document.querySelector('[name=date]').disabled=this.checked;document.querySelector('[name=date]').required=!this.checked;">
-        לא מתאים לי תאריך, תעדכנו אותי
-      </label>
-    </div>
+    <label class="no-date">
+      <input type="checkbox" name="no_date" value="yes" onchange="document.getElementById('d_12_6').disabled=this.checked;document.getElementById('d_12_6').required=!this.checked;">
+      לא מסתדר לי המועד הזה, אשמח לשמוע על מועדים נוספים
+    </label>
 
     <div class="price-tag">
-      <span>120 ₪ לאדם · מינימום 5</span>
+      <span>120 ₪ · עד 8 אנשים</span>
       <strong>₪</strong>
     </div>
 
@@ -180,7 +179,7 @@
 
     <input type="text" name="name" placeholder="שם מלא" required>
     <input type="tel" name="phone" placeholder="טלפון" required>
-    <input type="email" name="email" placeholder="מייל">
+    <input type="email" name="email" placeholder="מייל (לא חובה)">
 
     <select name="source">
       <option value="">איך שמעת?</option>
@@ -190,19 +189,24 @@
       <option value="other">אחר</option>
     </select>
 
-    <button type="submit">שולחים</button>
-    <div class="note">אשלח לינק לתשלום אחרי אישור המועד</div>
+    <button type="submit">לינק לתשלום ישלח בהקדם</button>
   </form>
+
+  <div class="location-note">
+    מתחם חסבון (מבוא המתמיד 6), בין המלך ג׳ורג׳ להלל · מרכז ירושלים
+  </div>
 
   <div class="success" id="success">
     <span class="emoji">✅</span>
     <h2 id="success-title">תודה שנרשמת!</h2>
-    <p id="success-text">אשלח לך לינק לתשלום ב-Bit או PayBox<br>ברגע שיהיו מספיק משתתפים.</p>
-    <p style="margin-top:12px;font-size:0.85rem;color:#999;">שאלות? <a href="https://instagram.com/dror_bht" style="color:#5a3a28;">@dror_bht</a></p>
+    <p id="success-text">לינק לתשלום ב-Bit או PayBox ישלח בהקדם.<br>מקום שמור אחרי אישור התשלום.</p>
+    <p style="margin-top:12px;font-size:0.85rem;color:#999;">
+      <a href="https://instagram.com/dror.coffee" style="color:#5a3a28;">@dror.coffee</a>
+    </p>
   </div>
 
   <div class="footer">
-    <a href="https://instagram.com/dror_bht">@dror_bht</a> · חסבון, ירושלים
+    <a href="https://instagram.com/dror.coffee">@dror.coffee</a> · חסבון, ירושלים
   </div>
 </div>
 
@@ -214,19 +218,17 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
     const noDate = form.querySelector('[name="no_date"]').checked;
     const workshop = form.querySelector('[name="workshop"]:checked');
-    const name = form.querySelector('[name="name"]').value;
-
     if (!workshop) return;
 
     if (noDate) {
       successTitle.textContent = 'נרשמת לעדכונים!';
-      successText.innerHTML = `נעדכן אותך כשיהיה מועד חדש.<br>בינתיים — עקבו ב<a href="https://instagram.com/dror_bht" style="color:#5a3a28;">@dror_bht</a>`;
+      successText.innerHTML = 'נעדכן אותך על המועד הבא.<br>בינתיים — <a href="https://instagram.com/dror.coffee" style="color:#5a3a28;">@dror.coffee</a>';
     } else {
       successTitle.textContent = 'תודה שנרשמת!';
-      successText.innerHTML = 'אשלח לך לינק לתשלום ב-Bit או PayBox<br>ברגע שיהיו מספיק משתתפים.';
+      successText.innerHTML = 'לינק לתשלום ב-Bit או PayBox ישלח בהקדם.<br>מקום שמור אחרי אישור התשלום.';
     }
 
     const btn = form.querySelector('button');
