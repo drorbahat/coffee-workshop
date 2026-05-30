@@ -5,822 +5,246 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>סדנת קפה — דרור בהט</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   
   body {
-    font-family: 'Assistant', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    font-family: 'Assistant', -apple-system, system-ui, sans-serif;
     background: #fbf9f6;
     color: #1a1a1a;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
-  }
-
-  /* --- Hero --- */
-  .hero {
-    min-height: 90vh;
+    min-height: 100dvh;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    text-align: center;
-    padding: 40px 24px;
-    background: linear-gradient(160deg, #1a0e08 0%, #2c1a10 40%, #3d2417 100%);
-    color: #f5f0eb;
-    position: relative;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse at 50% 100%, rgba(180,130,70,0.08) 0%, transparent 60%);
-  }
-  .hero-content {
-    position: relative;
-    max-width: 560px;
-  }
-  .hero-kicker {
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #c4952e;
-    margin-bottom: 16px;
-  }
-  .hero h1 {
-    font-size: 2.8rem;
-    font-weight: 800;
-    line-height: 1.15;
-    letter-spacing: -0.5px;
-  }
-  .hero h1 span {
-    color: #d4a94a;
-  }
-  .hero p {
-    font-size: 1.15rem;
-    opacity: 0.8;
-    margin-top: 16px;
-    max-width: 420px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
-  .hero-cta {
-    display: inline-block;
-    margin-top: 32px;
-    padding: 14px 40px;
-    background: #d4a94a;
-    color: #1a0e08;
-    font-size: 1.05rem;
-    font-weight: 700;
-    border-radius: 100px;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-  .hero-cta:hover {
-    background: #e0b85a;
-    transform: translateY(-1px);
-  }
-  .hero-signoff {
-    font-size: 0.9rem;
-    opacity: 0.5;
-    margin-top: 20px;
+    justify-content: center;
+    padding: 20px;
   }
 
-  /* --- Section --- */
-  section {
-    padding: 80px 24px;
-  }
-  .section-inner {
-    max-width: 680px;
-    margin: 0 auto;
-  }
-  .section-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #b8944a;
-    margin-bottom: 8px;
-  }
-  .section-title {
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: #1a0e08;
-  }
-  .section-title span {
-    color: #8b6914;
-  }
-  .section-text {
-    font-size: 1.05rem;
-    color: #555;
-    line-height: 1.7;
-    margin-top: 16px;
-  }
-
-  /* --- About --- */
-  .about {
+  .card {
     background: #fff;
-  }
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 40px;
-    align-items: center;
-  }
-  .about-photo {
+    border-radius: 24px;
+    padding: 40px 28px;
+    max-width: 420px;
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: 20px;
-    background: #f0ece8;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #bbb;
-    font-size: 3rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
+    border: 1px solid #f0ece8;
   }
-  .about-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+
+  .emoji-top {
+    font-size: 2.4rem;
+    display: block;
+    margin-bottom: 4px;
   }
-  .about-name {
-    font-size: 1.3rem;
+
+  h1 {
+    font-size: 1.5rem;
     font-weight: 700;
     color: #1a0e08;
   }
-  .about-role {
-    color: #8b6914;
-    font-weight: 600;
-    font-size: 0.92rem;
-    margin-top: 2px;
-  }
-  .about-bio {
-    font-size: 1.02rem;
-    color: #555;
-    line-height: 1.7;
-    margin-top: 12px;
-  }
-  .about-highlight {
-    display: inline-block;
-    background: #f5f0eb;
-    padding: 3px 12px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #5a3a28;
-    margin-top: 16px;
-  }
 
-  /* --- Social Proof --- */
-  .social-proof {
-    background: #f5f1ec;
-  }
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 32px;
-  }
-  .stat {
-    text-align: center;
-  }
-  .stat-num {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #2c1810;
-    line-height: 1;
-  }
-  .stat-label {
-    font-size: 0.9rem;
+  .sub {
+    font-size: 0.95rem;
     color: #777;
     margin-top: 4px;
+    line-height: 1.5;
   }
 
-  .testimonial {
-    background: #fff;
-    border-radius: 16px;
-    padding: 28px;
-    margin-top: 32px;
-    position: relative;
-  }
-  .testimonial::before {
-    content: '"';
-    font-size: 3rem;
-    color: #d4a94a;
-    position: absolute;
-    top: 12px;
-    right: 24px;
-    line-height: 1;
-    font-family: serif;
-  }
-  .testimonial p {
-    font-size: 1rem;
-    color: #444;
-    line-height: 1.7;
-  }
-  .testimonial-author {
-    font-weight: 600;
-    color: #1a0e08;
-    margin-top: 12px;
-    font-size: 0.9rem;
-  }
-
-  /* --- Workshops --- */
-  .workshops-container {
-    background: #fff;
-  }
-  .workshops-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 32px;
-  }
-  .workshop-card {
-    border: 1px solid #eeeae5;
-    border-radius: 20px;
-    padding: 32px 24px;
-    transition: all 0.25s;
-  }
-  .workshop-card:hover {
-    border-color: #d4a94a;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
-  }
-  .workshop-card.popular {
-    border-color: #d4a94a;
-    background: linear-gradient(135deg, #fefcf8 0%, #fdf8ef 100%);
-    position: relative;
-  }
-  .workshop-card.popular::after {
-    content: 'מומלץ';
-    position: absolute;
-    top: -10px;
-    left: 24px;
-    background: #d4a94a;
-    color: #1a0e08;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 3px 12px;
-    border-radius: 20px;
-  }
-  .workshop-card .icon {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 12px;
-  }
-  .workshop-card h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #1a0e08;
-  }
-  .workshop-card .duration {
-    font-size: 0.85rem;
-    color: #8b6914;
-    font-weight: 600;
-    margin-top: 4px;
-  }
-  .workshop-card ul {
-    list-style: none;
+  .price-line {
     margin-top: 16px;
-  }
-  .workshop-card ul li {
-    font-size: 0.95rem;
-    color: #555;
-    padding: 5px 0;
-    padding-right: 20px;
-    position: relative;
-    line-height: 1.4;
-  }
-  .workshop-card ul li::before {
-    content: '—';
-    position: absolute;
-    right: 0;
-    color: #c4952e;
-  }
-
-  /* --- Price --- */
-  .price-section {
-    background: #1a0e08;
-    color: #f5f0eb;
-    text-align: center;
-  }
-  .price-section .section-title {
-    color: #f5f0eb;
-  }
-  .price-big {
-    font-size: 4rem;
-    font-weight: 800;
-    color: #d4a94a;
-    line-height: 1;
-    margin-top: 24px;
-  }
-  .price-big small {
-    font-size: 1.4rem;
-    font-weight: 400;
-    color: rgba(245,240,235,0.6);
-  }
-  .price-detail {
-    font-size: 1rem;
-    color: rgba(245,240,235,0.7);
-    margin-top: 8px;
-  }
-  .price-note {
-    font-size: 0.85rem;
-    color: rgba(245,240,235,0.4);
-    margin-top: 20px;
-    max-width: 360px;
-    margin-left: auto;
-    margin-right: auto;
-    line-height: 1.6;
-  }
-  .price-cta {
-    display: inline-block;
-    margin-top: 28px;
-    padding: 14px 44px;
-    background: #d4a94a;
-    color: #1a0e08;
-    font-size: 1.05rem;
-    font-weight: 700;
-    border-radius: 100px;
-    text-decoration: none;
-    transition: all 0.2s;
-  }
-  .price-cta:hover {
-    background: #e0b85a;
-    transform: translateY(-1px);
-  }
-
-  /* --- Details Grid --- */
-  .details-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-top: 32px;
-  }
-  .detail-item {
-    text-align: center;
-  }
-  .detail-item .emoji {
-    font-size: 1.5rem;
-    display: block;
-    margin-bottom: 6px;
-  }
-  .detail-item .label {
-    font-size: 0.75rem;
-    color: #999;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .detail-item .value {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a0e08;
-    margin-top: 2px;
-  }
-
-  /* --- Form --- */
-  .form-section {
-    background: #fff;
-  }
-  .form-card {
-    background: #fbf9f6;
-    border: 1px solid #eeeae5;
-    border-radius: 20px;
-    padding: 40px 32px;
-    margin-top: 24px;
-  }
-  .form-group {
-    margin-bottom: 20px;
-  }
-  .form-group label {
-    display: block;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 6px;
-  }
-  .form-group input,
-  .form-group select {
-    width: 100%;
     padding: 12px 16px;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-family: inherit;
-    background: #fff;
-    transition: border-color 0.2s;
-  }
-  .form-group input:focus,
-  .form-group select:focus {
-    outline: none;
-    border-color: #d4a94a;
-    box-shadow: 0 0 0 3px rgba(212,169,74,0.1);
-  }
-  .radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .radio-group label {
-    font-weight: 400;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    padding: 12px 16px;
-    border: 1px solid #eee;
-    border-radius: 12px;
-    transition: all 0.2s;
-    background: #fff;
-  }
-  .radio-group label:hover {
-    border-color: #d4a94a;
-    background: #fdfaf5;
-  }
-  .radio-group input[type="radio"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #8b6914;
-  }
-  .radio-group input[type="radio"]:checked + span {
-    font-weight: 600;
-    color: #1a0e08;
-  }
-
-  .submit-btn {
-    width: 100%;
-    padding: 16px;
-    background: #1a0e08;
-    color: #f5f0eb;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: inherit;
-    margin-top: 8px;
-  }
-  .submit-btn:hover {
-    background: #2c1a10;
-  }
-  .submit-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .form-note {
-    font-size: 0.82rem;
-    color: #aaa;
-    text-align: center;
-    margin-top: 16px;
-  }
-
-  /* --- FAQ --- */
-  .faq-section {
     background: #f5f1ec;
-  }
-  .faq-item {
-    border-bottom: 1px solid #e5dfd8;
-    padding: 20px 0;
-  }
-  .faq-item:last-child { border: none; }
-  .faq-q {
-    font-weight: 700;
-    font-size: 1.02rem;
-    color: #1a0e08;
-    cursor: pointer;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    color: #3d2417;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .faq-q::after {
-    content: '+';
-    font-size: 1.3rem;
-    color: #c4952e;
-    transition: transform 0.2s;
-  }
-  .faq-q.open::after {
-    content: '−';
-  }
-  .faq-a {
-    font-size: 0.95rem;
-    color: #666;
-    line-height: 1.6;
-    margin-top: 12px;
-    display: none;
-  }
-  .faq-a.open {
-    display: block;
+  .price-line strong {
+    font-size: 1.1rem;
+    color: #1a0e08;
   }
 
-  /* --- Footer --- */
-  footer {
-    text-align: center;
-    padding: 40px 24px;
-    color: #aaa;
-    font-size: 0.85rem;
+  form {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #e5dfd8;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: #fbf9f6;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: #b8944a;
     background: #fff;
   }
-  footer a {
-    color: #5a3a28;
-    text-decoration: none;
+
+  .radio-group {
+    display: flex;
+    gap: 8px;
+  }
+  .radio-group label {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px;
+    border: 1px solid #e5dfd8;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fbf9f6;
+    color: #555;
+  }
+  .radio-group label:hover {
+    border-color: #c4952e;
+  }
+  .radio-group input[type="radio"] {
+    display: none;
+  }
+  .radio-group input[type="radio"]:checked + label {
+    border-color: #b8944a;
+    background: #fdf8ef;
+    color: #1a0e08;
     font-weight: 600;
   }
 
-  /* --- Success --- */
-  .success-message {
-    display: none;
-    text-align: center;
-    padding: 20px;
+  button {
+    padding: 16px;
+    background: #1a0e08;
+    color: #f5f0eb;
+    border: none;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+    margin-top: 4px;
   }
-  .success-message .emoji {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: 12px;
+  button:hover {
+    background: #2c1a10;
   }
-  .success-message h2 {
-    font-size: 1.4rem;
-    color: #1a0e08;
-  }
-  .success-message p {
-    color: #666;
-    margin-top: 8px;
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
-  /* --- Mobile --- */
-  @media (max-width: 640px) {
-    .hero { min-height: 85vh; padding: 40px 20px; }
-    .hero h1 { font-size: 2rem; }
-    .hero p { font-size: 1rem; }
-    .about-grid { grid-template-columns: 1fr; gap: 24px; }
-    .about-photo { max-width: 240px; margin: 0 auto; }
-    .workshops-grid { grid-template-columns: 1fr; }
-    .stats { grid-template-columns: 1fr; gap: 16px; }
-    .details-grid { grid-template-columns: repeat(2, 1fr); }
-    section { padding: 60px 20px; }
-    .section-title { font-size: 1.6rem; }
-    .price-big { font-size: 3rem; }
-    .form-card { padding: 24px 20px; }
+  .note {
+    font-size: 0.8rem;
+    color: #bbb;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .success {
+    display: none;
+    text-align: center;
+    padding: 16px 0;
+  }
+  .success .emoji {
+    font-size: 2.8rem;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .success h2 {
+    font-size: 1.3rem;
+    color: #1a0e08;
+  }
+  .success p {
+    color: #666;
+    margin-top: 4px;
+    font-size: 0.95rem;
+  }
+
+  .footer-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.82rem;
+    color: #ccc;
+  }
+  .footer-link a {
+    color: #888;
+    text-decoration: none;
   }
 </style>
 </head>
 <body>
 
-<!-- ======== HERO ======== -->
-<section class="hero">
-  <div class="hero-content">
-    <div class="hero-kicker">☕ סדנת קפה</div>
-    <h1>קפה טוב זה לא<br>קסם. זה <span>כיול</span>.</h1>
-    <p>סדנה מעשית של שעתיים — יוצאים עם ידע, טעם, וביטחון להכין קפה מעולה בבית.</p>
-    <a href="#form" class="hero-cta">נרשמים עכשיו</a>
-    <div class="hero-signoff">120 ₪ · מינימום 5 · חסבון, ים</div>
+<div class="card" id="card">
+  <span class="emoji-top">☕️</span>
+  <h1>סדנת קפה</h1>
+  <div class="sub">ממלאים פרטים ואחזור עם מועד</div>
+
+  <div class="price-line">
+    <span>120 ₪ · שעה וחצי</span>
+    <strong>חסבון, ירושלים</strong>
   </div>
-</section>
 
-<!-- ======== ABOUT ======== -->
-<section class="about">
-  <div class="section-inner">
-    <div class="about-grid">
-      <div class="about-photo">
-        <span>☕️</span>
-      </div>
-      <div>
-        <div class="section-label">מאחורי הסדנה</div>
-        <div class="about-name">דרור בהט</div>
-        <div class="about-role">בריסטה · קנופי בית קלייה</div>
-        <div class="about-bio">
-          סטודנט במוסררה, בריסטה בקנופי (בית קלייה בתל אביב), 
-          ומאחורי הבר בקז׳ואל — בר קפה בירושלים.
-          <br><br>
-          לפני שבוע מכרתי 20+ כוסות פילטר בפופ-אפ במאפייה של קז׳ואל, 
-          והבנתי שאנשים באמת רוצים להבין איך עושים את זה בבית.
-          <br><br>
-          הסדנה הזאת נולדה משם — לא תיאוריה, אלא מה שבאמת עובד.
-        </div>
-        <div class="about-highlight">קפה בגובה העיניים ☕</div>
-      </div>
+  <form id="form" action="https://formspree.io/f/xwvzzzbj" method="POST">
+    <input type="text" name="name" placeholder="שם מלא" required>
+    <input type="tel" name="phone" placeholder="טלפון" required>
+    <input type="email" name="email" placeholder="מייל (לא חובה)">
+
+    <div class="radio-group">
+      <input type="radio" name="workshop" id="w_filter" value="filter" required>
+      <label for="w_filter">☕ חליטות</label>
+      <input type="radio" name="workshop" id="w_espresso" value="espresso">
+      <label for="w_espresso">⚙️ אספרסו</label>
+      <input type="radio" name="workshop" id="w_both" value="both">
+      <label for="w_both">🤔 מתלבט</label>
     </div>
+
+    <select name="source">
+      <option value="">איך הגעת?</option>
+      <option value="instagram">אינסטגרם</option>
+      <option value="friend">חבר/ה המליצו</option>
+      <option value="hasbon">הכרתי מחסבון</option>
+      <option value="other">אחר</option>
+    </select>
+
+    <button type="submit">שולחים</button>
+    <div class="note">לא מחייב · אחזור תוך יום</div>
+  </form>
+
+  <div class="success" id="success">
+    <span class="emoji">✅</span>
+    <h2>תודה!</h2>
+    <p>אחזור אליך תוך יום<br>עם מועד הסדנה.</p>
   </div>
-</section>
 
-<!-- ======== SOCIAL PROOF ======== -->
-<section class="social-proof">
-  <div class="section-inner">
-    <div class="section-label">הוכחה</div>
-    <div class="section-title">קפה אמיתי, <span>אנשים אמיתיים</span></div>
-    
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-num">20+</div>
-        <div class="stat-label">כוסות בפופ-אפ אחד</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">₪0</div>
-        <div class="stat-label">תיאוריה מיותרת</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num">100%</div>
-        <div class="stat-label">מעשי</div>
-      </div>
-    </div>
-
-    <div class="testimonial">
-      <p>לא ציפיתי שקפה פילטר יכול להיות כזה טעים. דרור מסביר פשוט, נותן לטעום,
-      ועונה על כל השאלות הכי בסיסיות בלי להרגיש טיפש. יצאתי עם מתכון שעובד,
-      והמון ביטחון להכין לבד בבית.</p>
-      <div class="testimonial-author">— מ', השתתפה בטעימה בקז׳ואלה</div>
-    </div>
+  <div class="footer-link">
+    <a href="https://instagram.com/dror_bht">@dror_bht</a>
   </div>
-</section>
-
-<!-- ======== WORKSHOPS ======== -->
-<section class="workshops-container">
-  <div class="section-inner">
-    <div class="section-label">בוחרים מסלול</div>
-    <div class="section-title">שתי סדנאות, <span>קפה אחד</span></div>
-    <div class="section-text">שתיהן מעשיות, שתיהן בחיוך. בוחרים לפי מה שמתאים לכם.</div>
-    
-    <div class="workshops-grid">
-      <div class="workshop-card popular">
-        <span class="icon">☕</span>
-        <h3>חליטות ביתיות</h3>
-        <div class="duration">שעה וחצי</div>
-        <ul>
-          <li>מתכון V60 שעובד בבית</li>
-          <li>אירו-פרס, פרנץ' פרס, מקינטה — ההבדלים בטעם</li>
-          <li>כל אחד מכין וטועם</li>
-          <li>מה באמת צריך לקנות (ומה לא)</li>
-        </ul>
-      </div>
-
-      <div class="workshop-card">
-        <span class="icon">⚙️</span>
-        <h3>בריסטה ביתית</h3>
-        <div class="duration">שעתיים</div>
-        <ul>
-          <li>איך לכוון מטחנה ולמצוא את הטחינה המדויקת</li>
-          <li>הורדת שוטים — תרגול עד שזה יוצא נכון</li>
-          <li>הקצפת חלב ממיקרו-פואם ועד מזיגה</li>
-          <li>מה לעשות שהאספרסו מר או חמוץ</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ======== PRICE ======== -->
-<section class="price-section" id="form">
-  <div class="section-inner">
-    <div class="section-label">מחיר</div>
-    <div class="section-title">משתלם <span>לכולם</span></div>
-    
-    <div class="price-big">120 <small>₪</small></div>
-    <div class="price-detail">לאדם · שעה וחצי–שעתיים</div>
-    <div class="price-note">
-      מינימום 5 משתתפים. אם לא נרשמים מספיק — 
-      מחזירים את הכסף במלואו. פשוט.
-    </div>
-    
-    <div class="details-grid">
-      <div class="detail-item">
-        <span class="emoji">⏱</span>
-        <div class="label">משך</div>
-        <div class="value">1.5–2 שעות</div>
-      </div>
-      <div class="detail-item">
-        <span class="emoji">📍</span>
-        <div class="label">מיקום</div>
-        <div class="value">חסבון, ים</div>
-      </div>
-      <div class="detail-item">
-        <span class="emoji">👥</span>
-        <div class="label">מינימום</div>
-        <div class="value">5 אנשים</div>
-      </div>
-      <div class="detail-item">
-        <span class="emoji">💳</span>
-        <div class="label">תשלום</div>
-        <div class="value">Bit / מזומן</div>
-      </div>
-    </div>
-
-    <!-- Form -->
-    <div class="form-card">
-      <form id="workshopForm" action="https://formspree.io/f/xwvzzzbj" method="POST">
-        <div class="form-group">
-          <label>שם מלא</label>
-          <input type="text" name="name" placeholder="ישראל ישראלי" required>
-        </div>
-        <div class="form-group">
-          <label>טלפון</label>
-          <input type="tel" name="phone" placeholder="050-1234567" required>
-        </div>
-        <div class="form-group">
-          <label>מייל (לא חובה)</label>
-          <input type="email" name="email" placeholder="me@example.com">
-        </div>
-        <div class="form-group">
-          <label>איזו סדנה?</label>
-          <div class="radio-group">
-            <label>
-              <input type="radio" name="workshop" value="filter" required>
-              <span>☕ חליטות ביתיות — V60, אירו-פרס ועוד</span>
-            </label>
-            <label>
-              <input type="radio" name="workshop" value="espresso">
-              <span>⚙️ בריסטה — אספרסו, הקצפה, כיול</span>
-            </label>
-            <label>
-              <input type="radio" name="workshop" value="both">
-              <span>🤔 עדיין מתלבט/ת</span>
-            </label>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>איך הגעת?</label>
-          <select name="source">
-            <option value="">בוחר/ת</option>
-            <option value="instagram">אינסטגרם</option>
-            <option value="friend">חבר/ה המליצו</option>
-            <option value="hasbon">הכרתי מחסבון</option>
-            <option value="other">אחר</option>
-          </select>
-        </div>
-        <button type="submit" class="submit-btn">שולחים הרשמה</button>
-        <div class="form-note">לא מחייב · אחזור תוך יום עם מועד מדויק</div>
-      </form>
-
-      <div class="success-message" id="successMessage">
-        <span class="emoji">✅</span>
-        <h2>תודה שנרשמת!</h2>
-        <p>אחזור אליך תוך יום עם פרטי התשלום והמועד.<br>
-        בינתיים — <a href="https://instagram.com/dror_bht" style="color:#5a3a28;font-weight:600;">@dror_bht</a></p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ======== FAQ ======== -->
-<section class="faq-section">
-  <div class="section-inner">
-    <div class="section-label">שאלות</div>
-    <div class="section-title">מה שעולה <span>לראש</span></div>
-    
-    <div style="margin-top:24px;">
-      <div class="faq-item">
-        <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">אין לי שום ציוד בבית. מתאים לי?</div>
-        <div class="faq-a">בטח. הסדנה מלמדת מה באמת צריך (ולא צריך). גם אירו-פרס ב-100 ש״ח נותן קפה מצוין — לא חייבים מכונה יקרה.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">יש לי מכונת אספרסו שאני לא מצליח איתה</div>
-        <div class="faq-a">זו בדיוק הסיבה לסדנת הבריסטה. נבין ביחד איפה הבעיה — טחינה, מטחנה, מינון, או טכניקה — ונתקן.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">מה אם נרשמים פחות מ-5?</div>
-        <div class="faq-a">הסדנה נדחית או מבוטלת והכסף מוחזר במלואו. אני מודיע תוך 48 שעות לפני המועד.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">אפשר להביא חבר/חברה?</div>
-        <div class="faq-a">כמובן. עד 8 משתתפים לסדנה. כל אחד נרשם בנפרד.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">איך משלמים?</div>
-        <div class="faq-a">Bit או מזומן במקום. פרטי התשלום נשלחים אחרי אישור המועד.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ======== FOOTER ======== -->
-<footer>
-  <a href="https://instagram.com/dror_bht">@dror_bht</a> · 054-232-6181<br>
-  <span style="color:#ccc;">מתחם חסבון, מבוא המתמיד 6, ירושלים</span>
-</footer>
+</div>
 
 <script>
-  const form = document.getElementById('workshopForm');
-  const successMsg = document.getElementById('successMessage');
+  const form = document.getElementById('form');
+  const success = document.getElementById('success');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = form.querySelector('.submit-btn');
+    const btn = form.querySelector('button');
     btn.disabled = true;
     btn.textContent = 'שולח...';
 
     try {
-      const data = new FormData(form);
-      const response = await fetch(form.action, { method: 'POST', body: data, headers: { 'Accept': 'application/json' } });
-      if (!response.ok) throw new Error('send failed');
-    } catch (err) {
-      // Still show success — the form data was captured
-    }
-    
-    form.querySelector('form > *:not(.success-message)').style.display = 'none';
-    successMsg.style.display = 'block';
+      await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json' } });
+    } catch (_) {}
+
+    form.style.display = 'none';
+    success.style.display = 'block';
   });
 </script>
 
