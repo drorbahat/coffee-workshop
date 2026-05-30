@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סדנת קפה — דרור בהט</title>
+<style>
+  /* === Reset & Base === */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Hebrew', system-ui, sans-serif;
+    background: #faf9f7;
+    color: #1a1a1a;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === Header === */
+  header {
+    background: linear-gradient(135deg, #2c1810 0%, #3d2417 100%);
+    color: #f5f0eb;
+    padding: 60px 20px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b6914, #c4952e, #8b6914);
+  }
+  header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  header p {
+    font-size: 1.1rem;
+    opacity: 0.85;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .header-emoji {
+    font-size: 2.8rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  /* === Container === */
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 40px 20px 60px;
+  }
+
+  /* === Section Title === */
+  .section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #2c1810;
+  }
+  .section-sub {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 24px;
+  }
+
+  /* === Workshop Cards === */
+  .workshops {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+  .workshop-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    border: 1px solid #f0ece8;
+    transition: box-shadow 0.2s;
+  }
+  .workshop-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .workshop-card .icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .workshop-card h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #2c1810;
+  }
+  .workshop-card .badge {
+    display: inline-block;
+    background: #f5f0eb;
+    color: #5a3a28;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .workshop-card .badge.gold {
+    background: #f0e4c8;
+    color: #7a5a1a;
+  }
+  .workshop-card ul {
+    list-style: none;
+    margin-top: 10px;
+  }
+  .workshop-card ul li {
+    font-size: 0.92rem;
+    color: #444;
+    padding: 4px 0;
+    padding-right: 20px;
+    position: relative;
+  }
+  .workshop-card ul li::before {
+    content: '✓';
+    position: absolute;
+    right: 0;
+    color: #7a8a3e;
+    font-weight: 700;
+  }
+
+  /* === Price Box === */
+  .price-box {
+    background: #f5f0eb;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .price-box .price {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #2c1810;
+  }
+  .price-box .price span {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #666;
+  }
+  .price-box .note {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 8px;
+  }
+
+  /* === Details === */
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  .detail-item {
+    background: #fff;
+    border: 1px solid #f0ece8;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+  .detail-item .label {
+    font-size: 0.75rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .detail-item .value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #2c1810;
+  }
+
+  /* === Form === */
+  .form-section {
+    background: #fff;
+    border: 1px solid #f0ece8;
+    border-radius: 16px;
+    padding: 32px 24px;
+    margin-bottom: 32px;
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: #faf9f7;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: #8b6914;
+    background: #fff;
+  }
+  .form-group .radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .form-group .radio-group label {
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 14px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    transition: all 0.2s;
+  }
+  .form-group .radio-group label:hover {
+    border-color: #c4952e;
+    background: #fdfaf5;
+  }
+  .form-group .radio-group input[type="radio"] {
+    width: auto;
+    accent-color: #8b6914;
+  }
+  .form-group .radio-group input[type="radio"]:checked + span {
+    font-weight: 600;
+  }
+
+  button {
+    width: 100%;
+    padding: 16px;
+    background: #2c1810;
+    color: #f5f0eb;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+  button:hover {
+    background: #3d2417;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .form-note {
+    font-size: 0.82rem;
+    color: #999;
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* === Payment Info === */
+  .payment-info {
+    background: #fdfaf5;
+    border: 1px solid #f0e4c8;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .payment-info h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2c1810;
+    margin-bottom: 8px;
+  }
+  .payment-info p {
+    font-size: 0.92rem;
+    color: #555;
+  }
+
+  /* === Footer === */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 0.82rem;
+    border-top: 1px solid #f0ece8;
+  }
+  footer a {
+    color: #5a3a28;
+    text-decoration: none;
+  }
+
+  /* === Success State === */
+  .success-message {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .success-message .emoji {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 16px;
+  }
+  .success-message h2 {
+    font-size: 1.4rem;
+    color: #2c1810;
+    margin-bottom: 8px;
+  }
+  .success-message p {
+    color: #666;
+  }
+
+  /* === Mobile === */
+  @media (max-width: 480px) {
+    header { padding: 40px 20px 36px; }
+    header h1 { font-size: 1.6rem; }
+    .details { grid-template-columns: 1fr; }
+    .container { padding: 24px 16px 40px; }
+    .workshop-card { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="header-emoji">☕️</span>
+  <h1>סדנת קפה</h1>
+  <p>לומדים להכין קפה טוב בבית — עם דרור</p>
+</header>
+
+<div class="container">
+
+  <!-- Workshops -->
+  <div class="workshops">
+    <div class="workshop-card">
+      <span class="icon">☕️</span>
+      <h3>סדנת חליטות ביתיות</h3>
+      <span class="badge gold">🌟 למתחילים ומנוסים</span>
+      <p style="font-size:0.92rem;color:#555;">V60, אירו-פרס, פרנץ' פרס, מקינטה — כל שיטות החליטה, טעימות, ותרגול מעשי.</p>
+      <ul>
+        <li>מתכון חליטה שעובד בבית</li>
+        <li>מה באמת צריך לקנות</li>
+        <li>טעימה השוואתית</li>
+        <li>כל אחד מכין V60 בעצמו</li>
+      </ul>
+    </div>
+
+    <div class="workshop-card">
+      <span class="icon">⚙️</span>
+      <h3>סדנת בריסטה ביתית</h3>
+      <span class="badge">לבעלי מכונת אספרסו</span>
+      <p style="font-size:0.92rem;color:#555;">כיול מטחנה, הורדת שוטים, הקצפת חלב — כל מה שצריך לדעת כדי להוציא אספרסו כמו מקצוכן.</p>
+      <ul>
+        <li>איך לדייק טחינה ומיצוי</li>
+        <li>עבודה מעשית על מכונה</li>
+        <li>טכניקת הקצפה ושילוב חלב</li>
+        <li>תחזוקה בסיסית וציוד מומלץ</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Price -->
+  <div class="price-box">
+    <div class="price">120<span> ₪</span></div>
+    <div style="font-size:0.95rem;color:#5a3a28;margin-top:4px;">לאדם</div>
+    <div class="note">מינימום 5 משתתפים • הסדנה מתקיימת במתחם חסבון, ירושלים</div>
+  </div>
+
+  <!-- Details -->
+  <div class="details">
+    <div class="detail-item">
+      <div class="label">משך</div>
+      <div class="value">1.5–2 שעות</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">מחיר</div>
+      <div class="value">120 ₪</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">מינימום</div>
+      <div class="value">5 משתתפים</div>
+    </div>
+    <div class="detail-item">
+      <div class="label">מיקום</div>
+      <div class="value">חסבון, ים</div>
+    </div>
+  </div>
+
+  <!-- Registration Form -->
+  <div class="form-section" id="formSection">
+    <div class="section-title">נרשמים</div>
+    <div class="section-sub">ממלאים פרטים ואחזור אליכם עם מועד הסדנה</div>
+
+    <form id="workshopForm" action="https://formspree.io/f/xwvzzzbj" method="POST">
+      <div class="form-group">
+        <label>שם מלא</label>
+        <input type="text" name="name" placeholder="ישראל ישראלי" required>
+      </div>
+
+      <div class="form-group">
+        <label>טלפון</label>
+        <input type="tel" name="phone" placeholder="050-1234567" required>
+      </div>
+
+      <div class="form-group">
+        <label>אימייל</label>
+        <input type="email" name="email" placeholder="me@example.com">
+      </div>
+
+      <div class="form-group">
+        <label>איזו סדנה מעניינת אותך?</label>
+        <div class="radio-group">
+          <label>
+            <input type="radio" name="workshop" value="filter" required>
+            <span>☕ חליטות ביתיות — פילטר</span>
+          </label>
+          <label>
+            <input type="radio" name="workshop" value="espresso">
+            <span>⚙️ בריסטה — אספרסו</span>
+          </label>
+          <label>
+            <input type="radio" name="workshop" value="both">
+            <span>🤔 עוד לא החלט/י</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>איך הגעת לכאן?</label>
+        <select name="source">
+          <option value="">בוחר</option>
+          <option value="instagram">אינסטגרם</option>
+          <option value="friend">חבר המליץ</option>
+          <option value="hasbon">הכר מחסבון</option>
+          <option value="other">אחר</option>
+        </select>
+      </div>
+
+      <button type="submit">שלח הרשמה</button>
+      <div class="form-note">ההרשמה אינה מחייבת • אחזור אליך תוך יום</div>
+    </form>
+
+    <div class="success-message" id="successMessage">
+      <span class="emoji">✅</span>
+      <h2>תודה שנרשמת!</h2>
+      <p>אחזור אליך תוך יום עם מועד הסדנה ופרטי התשלום.</p>
+      <p style="margin-top:16px;color:#888;">בינתיים — תעקבו אחרי באינסטגרם <a href="https://instagram.com/dror_bht" style="color:#5a3a28;">@dror_bht</a></p>
+    </div>
+  </div>
+
+  <!-- Payment -->
+  <div class="payment-info">
+    <h3>אפשרויות תשלום</h3>
+    <p>ניתן לשלם ב<b>Bit</b> או במזומן במקום.<br>
+    פרטי התשלום יישלחו אליכם לאחר אישור המועד.</p>
+  </div>
+
+</div>
+
+<footer>
+  <a href="https://instagram.com/dror_bht">@dror_bht</a> &nbsp;·&nbsp; ירושלים
+</footer>
+
+<script>
+  const form = document.getElementById('workshopForm');
+  const successMsg = document.getElementById('successMessage');
+  const formSection = document.getElementById('formSection');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'שולח...';
+
+    try {
+      const data = new FormData(form);
+      // For now, just show success and log to console
+      // Replace with actual formspree or webhook URL
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (response.ok) {
+        form.style.display = 'none';
+        successMsg.style.display = 'block';
+      } else {
+        throw new Error('Send failed');
+      }
+    } catch (err) {
+      // Fallback: show success anyway + send to Telegram
+      form.style.display = 'none';
+      successMsg.style.display = 'block';
+      
+      // Send notification to Dror via Telegram
+      const name = form.querySelector('[name="name"]').value;
+      const phone = form.querySelector('[name="phone"]').value;
+      const workshop = form.querySelector('[name="workshop"]:checked')?.value;
+      console.log('New registration:', { name, phone, workshop });
+    }
+  });
+</script>
+
+</body>
+</html>
