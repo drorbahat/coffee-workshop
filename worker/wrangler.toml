@@ -1,0 +1,13 @@
+name = "coffee-workshop-admin"
+main = "src/index.js"
+compatibility_date = "2026-05-31"
+
+workers_dev = true
+
+# KV namespace for the live workshop status.
+[[kv_namespaces]]
+binding = "COFFEE_WORKSHOP"
+id = "135aa6af7172480892121faad894db07"
+
+[vars]
+ALLOWED_ORIGIN = "https://drorbahat.github.io"
