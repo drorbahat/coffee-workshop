@@ -1,8 +1,15 @@
 const STATUS_KEY = 'status';
-const DEFAULT_STATUS = {
+const WORKSHOPS = {
   filter_2026_06_15: {
-    title: 'סדנת חליטות ביתיות',
+    title: 'סדנת חליטות ביתיות — קנופי ירושלים',
     date_label: 'שני 15.6 · 16:00–17:30',
+    capacity: 8,
+    confirmed: 0,
+    open: true,
+  },
+  uru_2026_07_03: {
+    title: 'סדנת חליטות ביתיות — URU תל אביב',
+    date_label: 'שישי 3.7 · 11:00–12:30',
     capacity: 8,
     confirmed: 0,
     open: true,
@@ -51,8 +58,9 @@ export default {
       const body = await request.json().catch(() => ({}));
       const action = body.action;
       const key = body.key || 'filter_2026_06_15';
+      if (!WORKSHOPS[key]) return json({ ok: false, error: 'unknown workshop' }, env, 400);
       const status = await getStatus(env);
-      const workshop = status[key] || { ...DEFAULT_STATUS.filter_2026_06_15 };
+      const workshop = status[key] || { ...WORKSHOPS[key] };
       const capacity = Number(workshop.capacity || 8);
       let confirmed = Number(workshop.confirmed || 0);
 
@@ -77,9 +85,15 @@ export default {
 
 async function getStatus(env) {
   const existing = await env.COFFEE_WORKSHOP.get(STATUS_KEY, 'json');
-  if (existing) return existing;
-  await env.COFFEE_WORKSHOP.put(STATUS_KEY, JSON.stringify(DEFAULT_STATUS));
-  return DEFAULT_STATUS;
+  // merge: keep stored values, add any new workshops missing from KV
+  const merged = { ...WORKSHOPS, ...(existing || {}) };
+  for (const key of Object.keys(WORKSHOPS)) {
+    if (!merged[key]) merged[key] = { ...WORKSHOPS[key] };
+  }
+  if (!existing || Object.keys(WORKSHOPS).some((k) => !(k in existing))) {
+    await env.COFFEE_WORKSHOP.put(STATUS_KEY, JSON.stringify(merged));
+  }
+  return merged;
 }
 
 async function isAuthed(request, env) {
@@ -136,12 +150,12 @@ function loginPage(error = '') {
 <html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ניהול סדנה</title>
+<title>ניהול סדנאות</title>
 <style>${baseCss()}</style>
 </head>
 <body>
   <main class="card narrow">
-    <h1>ניהול סדנה</h1>
+    <h1>ניהול סדנאות</h1>
     <p>כניסה פרטית לעדכון מספר המקומות המאושרים.</p>
     ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
     <form method="post" action="/admin/login">
@@ -155,26 +169,18 @@ function loginPage(error = '') {
 }
 
 function adminPage() {
-  return `<!doctype html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ניהול סדנה</title>
-<style>${baseCss()}</style>
-</head>
-<body>
-  <main class="card">
+  const cards = Object.entries(WORKSHOPS).map(([key, w]) => `
+  <main class="card" data-key="${key}">
     <div class="top">
       <div>
-        <h1>ניהול סדנה</h1>
-        <p>חליטות ביתיות · שני 15.6 · 16:00–17:30</p>
+        <h1>${escapeHtml(w.title)}</h1>
+        <p>${escapeHtml(w.date_label)}</p>
       </div>
-      <form method="post" action="/admin/logout"><button class="ghost" type="submit">יציאה</button></form>
     </div>
 
     <section class="status">
-      <div class="number"><span id="confirmed">—</span><small>מתוך <span id="capacity">8</span></small></div>
-      <div class="badge" id="state">טוען...</div>
+      <div class="number"><span class="confirmed">—</span><small>מתוך <span class="capacity">${w.capacity}</span></small></div>
+      <div class="badge state">טוען...</div>
     </section>
 
     <div class="actions">
@@ -185,41 +191,54 @@ function adminPage() {
     </div>
 
     <button data-action="reset" class="danger">איפוס ל־0 ופתיחה מחדש</button>
-    <p class="note" id="note">כל שינוי מתעדכן מיד באתר הציבורי.</p>
-  </main>
+  </main>`).join('\n');
+
+  return `<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ניהול סדנאות</title>
+<style>${baseCss()}
+body{display:flex;flex-direction:column;align-items:center;gap:18px;justify-content:flex-start;padding-top:40px}
+.logout-bar{width:min(520px,100%);display:flex;justify-content:flex-end}
+</style>
+</head>
+<body>
+  <div class="logout-bar"><form method="post" action="/admin/logout"><button class="ghost" type="submit">יציאה</button></form></div>
+  ${cards}
+  <p class="note" id="note">כל שינוי מתעדכן מיד באתר הציבורי.</p>
 
 <script>
-const KEY = 'filter_2026_06_15';
 async function load() {
   const res = await fetch('/api/status');
   const status = await res.json();
-  render(status);
+  document.querySelectorAll('.card[data-key]').forEach((card) => render(card, status[card.dataset.key]));
 }
-function render(status) {
-  const w = status[KEY];
+function render(card, w) {
+  if (!w) return;
   const confirmed = Number(w.confirmed || 0);
   const capacity = Number(w.capacity || 8);
   const full = w.open === false || confirmed >= capacity;
-  document.getElementById('confirmed').textContent = confirmed;
-  document.getElementById('capacity').textContent = capacity;
-  const state = document.getElementById('state');
+  card.querySelector('.confirmed').textContent = confirmed;
+  card.querySelector('.capacity').textContent = capacity;
+  const state = card.querySelector('.state');
   state.textContent = full ? 'המועד מלא' : 'פתוח להרשמה';
-  state.className = full ? 'badge full' : 'badge open';
+  state.className = full ? 'badge state full' : 'badge state open';
 }
-async function update(action) {
+async function update(key, action) {
   const note = document.getElementById('note');
   note.textContent = 'מעדכן...';
   const res = await fetch('/admin/update', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ key: KEY, action })
+    body: JSON.stringify({ key, action })
   });
   const data = await res.json();
   if (!data.ok) { note.textContent = 'שגיאה בעדכון'; return; }
-  render(data.status);
+  document.querySelectorAll('.card[data-key]').forEach((card) => render(card, data.status[card.dataset.key]));
   note.textContent = 'עודכן באתר הציבורי.';
 }
-document.querySelectorAll('[data-action]').forEach((button) => {
-  button.addEventListener('click', () => update(button.dataset.action));
+document.querySelectorAll('.card[data-key] [data-action]').forEach((button) => {
+  button.addEventListener('click', () => update(button.closest('.card').dataset.key, button.dataset.action));
 });
 load();
 </script>
@@ -230,7 +249,7 @@ load();
 function baseCss() {
   return `
 @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-*{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:#faf8f5;color:#1a0e08;font-family:'Varela Round',system-ui,sans-serif;padding:20px}.card{width:min(520px,100%);background:white;border:1px solid #eadfce;border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(26,14,8,.08)}.narrow{width:min(420px,100%)}h1{margin:0 0 8px;font-size:1.5rem}p{margin:0 0 18px;color:#6f6258;line-height:1.5}.top{display:flex;align-items:start;justify-content:space-between;gap:16px}.status{display:flex;align-items:center;justify-content:space-between;background:#fbfaf8;border:1px solid #eadfce;border-radius:18px;padding:18px;margin:18px 0}.number{font-size:3.2rem;font-weight:800;line-height:1}.number small{display:block;font-size:.85rem;color:#7a6657;margin-top:4px}.badge{border-radius:999px;padding:8px 12px;font-size:.9rem;font-weight:700}.open{background:#edf7ef;color:#286b35}.full{background:#f5e8dc;color:#764a28}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}button,input{width:100%;border-radius:14px;border:1px solid #eadfce;font-family:inherit;font-size:1rem}input{padding:13px 14px;margin:6px 0 12px;background:#fbfaf8}button{padding:13px 14px;background:#1a0e08;color:white;font-weight:700;cursor:pointer}.secondary{background:#fbfaf8;color:#1a0e08}.ghost{background:transparent;color:#7a6657;padding:8px 10px}.danger{background:#6f2d22;margin-top:4px}.note{font-size:.85rem;text-align:center;margin:14px 0 0}.error{background:#fff1f0;color:#8a2a22;border:1px solid #f1c5bd;border-radius:12px;padding:10px;margin-bottom:12px}label{font-weight:700;color:#3d2417}`;
+*{box-sizing:border-box} body{margin:0;min-height:100vh;display:grid;place-items:center;background:#faf8f5;color:#1a0e08;font-family:'Varela Round',system-ui,sans-serif;padding:20px}.card{width:min(520px,100%);background:white;border:1px solid #eadfce;border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(26,14,8,.08)}.narrow{width:min(420px,100%)}h1{margin:0 0 8px;font-size:1.5rem}p{margin:0 0 18px;color:#6f6258;line-height:1.5}.top{display:flex;align-items:start;justify-content:space-between;gap:16px}.status{display:flex;align-items:center;justify-content:space-between;background:#fbfaf8;border:1px solid #eadfce;border-radius:18px;padding:18px;margin:18px 0}.number{font-size:3.2rem;font-weight:800;line-height:1}.number small{display:block;font-size:.85rem;color:#7a6657;margin-top:4px}.badge{border-radius:999px;padding:8px 12px;font-size:.9rem;font-weight:700}.open{background:#edf7ef;color:#286b35}.full{background:#f5e8dc;color:#764a28}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}button,input{width:100%;border-radius:14px;border:1px solid #eadfce;font-family:inherit;font-size:1rem}input{padding:13px 14px;margin:6px 0 12px;background:#fbfaf8}button{padding:13px 14px;background:#1a0e08;color:white;font-weight:700;cursor:pointer}.secondary{background:#fbfaf8;color:#1a0e08}.ghost{background:transparent;color:#7a6657;padding:8px 10px;width:auto}.danger{background:#6f2d22;margin-top:4px}.note{font-size:.85rem;text-align:center;margin:14px 0 0}.error{background:#fff1f0;color:#8a2a22;border:1px solid #f1c5bd;border-radius:12px;padding:10px;margin-bottom:12px}label{font-weight:700;color:#3d2417}`;
 }
 
 function escapeHtml(value) {

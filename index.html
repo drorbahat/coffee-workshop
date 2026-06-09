@@ -400,8 +400,13 @@
       var ed = getEdition();
       if (note) note.style.color = '';
       if (isTLV(ed)) {
-        if (btn) btn.textContent = 'שמרו לי מקום';
-        if (note) note.textContent = 'לינק לתשלום יישלח ידנית. המקום נשמר אחרי אישור התשלום.';
+        if (tlvFull) {
+          if (btn) btn.textContent = 'הוסיפו אותי לרשימה';
+          if (note) note.textContent = 'המועד בתל אביב מלא — אשלח עדכון כשייפתח מועד נוסף.';
+        } else {
+          if (btn) btn.textContent = 'שמרו לי מקום';
+          if (note) note.textContent = 'לינק לתשלום יישלח ידנית. המקום נשמר אחרי אישור התשלום.';
+        }
       } else if (isUpdates(ed)) {
         if (btn) btn.textContent = 'עדכנו אותי על מועדים';
         if (note) note.textContent = isEspresso(ed)
@@ -423,29 +428,53 @@
     var WORKER_STATUS_URL = 'https://coffee-workshop-admin.drorbahat.workers.dev/api/status';
     var jeruFull = false;
     var jeruSeatsLeft = null;
+    var tlvFull = false;
+    var tlvSeatsLeft = null;
     var jeruRadioSub = document.querySelector('input[name="edition"][value="קנופי · ירושלים"]')
       ? document.querySelector('input[name="edition"][value="קנופי · ירושלים"]').closest('label').querySelector('.pick-body span')
       : null;
+    var tlvRadioSub = document.querySelector('input[name="edition"][value="URU · תל אביב"]')
+      ? document.querySelector('input[name="edition"][value="URU · תל אביב"]').closest('label').querySelector('.pick-body span')
+      : null;
     var canopyBadge = document.querySelector('#register') && document.querySelectorAll('.edition .status')[0];
+    var tlvBadge = document.querySelector('#register') && document.querySelectorAll('.edition .status')[1];
 
     function applyStatus(status) {
       var w = status && status.filter_2026_06_15;
-      if (!w) return;
-      var confirmed = Number(w.confirmed || 0);
-      var capacity = Number(w.capacity || 8);
-      jeruFull = w.open === false || confirmed >= capacity;
-      jeruSeatsLeft = Math.max(0, capacity - confirmed);
+      if (w) {
+        var confirmed = Number(w.confirmed || 0);
+        var capacity = Number(w.capacity || 8);
+        jeruFull = w.open === false || confirmed >= capacity;
+        jeruSeatsLeft = Math.max(0, capacity - confirmed);
 
-      // edition card badge
-      if (canopyBadge) {
-        if (jeruFull) { canopyBadge.textContent = 'המקומות נגמרו'; canopyBadge.classList.add('status--full'); }
-        else { canopyBadge.textContent = 'מועד פתוח'; canopyBadge.classList.remove('status--full'); }
+        // edition card badge
+        if (canopyBadge) {
+          if (jeruFull) { canopyBadge.textContent = 'המקומות נגמרו'; canopyBadge.classList.add('status--full'); }
+          else { canopyBadge.textContent = 'מועד פתוח'; canopyBadge.classList.remove('status--full'); }
+        }
+        // form radio sublabel
+        if (jeruRadioSub) {
+          if (jeruFull) jeruRadioSub.textContent = 'המועד הקרוב מלא · השאירו פרטים למועד הבא';
+          else if (confirmed > 0) jeruRadioSub.textContent = 'קנופי · שני 15.6 · נותרו ' + jeruSeatsLeft + ' מקומות · 180 ₪';
+          else jeruRadioSub.textContent = 'קנופי · שני 15.6 · 16:00 · 180 ₪ · כולל שקית פולים';
+        }
       }
-      // form radio sublabel
-      if (jeruRadioSub) {
-        if (jeruFull) jeruRadioSub.textContent = 'המועד הקרוב מלא · השאירו פרטים למועד הבא';
-        else if (confirmed > 0) jeruRadioSub.textContent = 'קנופי · שני 15.6 · נותרו ' + jeruSeatsLeft + ' מקומות · 180 ₪';
-        else jeruRadioSub.textContent = 'קנופי · שני 15.6 · 16:00 · 180 ₪ · כולל שקית פולים';
+      var t = status && status.uru_2026_07_03;
+      if (t) {
+        var tConfirmed = Number(t.confirmed || 0);
+        var tCapacity = Number(t.capacity || 8);
+        tlvFull = t.open === false || tConfirmed >= tCapacity;
+        tlvSeatsLeft = Math.max(0, tCapacity - tConfirmed);
+
+        if (tlvBadge) {
+          if (tlvFull) { tlvBadge.textContent = 'המקומות נגמרו'; tlvBadge.classList.add('status--full'); }
+          else { tlvBadge.textContent = 'מועד פתוח'; tlvBadge.classList.remove('status--full'); }
+        }
+        if (tlvRadioSub) {
+          if (tlvFull) tlvRadioSub.textContent = 'המועד בתל אביב מלא · השאירו פרטים למועד הבא';
+          else if (tConfirmed > 0) tlvRadioSub.textContent = 'URU · שישי 3.7 · נותרו ' + tlvSeatsLeft + ' מקומות · 200 ₪';
+          else tlvRadioSub.textContent = 'URU · שישי 3.7 · 11:00 · 200 ₪ · כולל שקית פולים';
+        }
       }
       updateCta();
     }
