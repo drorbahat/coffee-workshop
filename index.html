@@ -24,7 +24,7 @@
   <div class="wrap">
     <div class="hero-grid">
       <div class="hero-text reveal" data-reveal>
-        <p class="eyebrow">ירושלים · ובקרוב גם תל אביב</p>
+        <p class="eyebrow">ירושלים · תל אביב</p>
         <h1>סדנאות קפה<br />מעשיות.</h1>
         <p class="lede">הזמנה פתוחה לסדנאות בבתי קלייה — קבוצה קטנה, הסברים, טעימות ותרגול, ויוצאים עם הכלים והשפה להכין קפה טוב בבית.</p>
         <div class="byline">
@@ -137,7 +137,7 @@
       <div class="reveal" data-reveal>
         <span class="idx">03 — בשיתוף</span>
         <h2 style="margin-top:14px;">בשיתוף בתי הקלייה</h2>
-        <p class="partner-lede">כל סדנה מתארחת אצל בית קלייה מקומי — קנופי בירושלים, ובקרוב URU בתל אביב. בסדנה נטעם פולים שונים, נבין את ההבדלים ביניהם, ואיך לבחור לעצמכם פולים כשאתם באים לקנות.</p>
+        <p class="partner-lede">כל סדנה מתארחת אצל בית קלייה מקומי — קנופי בירושלים ו-URU בתל אביב. בסדנה נטעם פולים שונים, נבין את ההבדלים ביניהם, ואיך לבחור לעצמכם פולים כשאתם באים לקנות.</p>
         <ul class="perks">
           <li>
             <span class="perk-tag">בתשלום</span>
@@ -168,7 +168,7 @@
         <span class="idx">04 — מועדים ומיקומים</span>
         <h2 style="margin-top:14px;">איפה ומתי</h2>
       </div>
-      <p>הסדנה מתארחת בבתי קלייה. בוחרים מיקום ונרשמים — ואם עדיין אין תאריך, משאירים פרטים ומקבלים עדכון ראשונים.</p>
+      <p>הסדנה מתארחת בבתי קלייה. בוחרים מיקום, נרשמים — ושומרים מקום.</p>
     </div>
 
     <div class="editions-grid reveal" data-reveal>
@@ -195,15 +195,16 @@
         <div class="edition-body">
           <div class="ws-top">
             <span class="ws-num">URU · תל אביב</span>
-            <span class="status status--soon">בקרוב</span>
+            <span class="status">מועד פתוח</span>
           </div>
           <h3>בית הקלייה URU</h3>
           <p class="edition-addr">הכישור 1, ביתן 107 · נמל תל אביב<br />תל אביב–יפו.</p>
+          <p class="edition-date"><span class="pin"></span> יום שישי · 3.7 · 11:00–12:30</p>
           <div class="ws-meta">
-            <b>מועד עתידי — טרם נקבע</b><span class="sep">·</span><b>כולל שקית 250 גרם</b>
+            <b>חליטות ביתיות</b><span class="sep">·</span><b>180 ₪</b><span class="sep">·</span><b>כולל שקית 250 גרם</b>
           </div>
           <div class="edition-spacer"></div>
-          <a href="#register" class="btn btn--ghost btn--block js-edition" data-edition="URU · תל אביב">הרשמה מוקדמת — לקבל עדכון</a>
+          <a href="#register" class="btn btn--block js-edition" data-edition="URU · תל אביב">לשמור מקום בתל אביב</a>
         </div>
       </article>
     </div>
@@ -254,7 +255,7 @@
       <div class="form-intro reveal" data-reveal>
         <span class="idx">06 — הרשמה</span>
         <h2 style="margin-top:14px;">שמרו מקום</h2>
-        <p>בוחרים מה שמתאים ומשאירים פרטים — הרשמה למועד בירושלים, הרשמה מוקדמת לתל אביב, או פשוט לקבל עדכונים על מועדים נוספים.</p>
+        <p>בוחרים מה שמתאים ומשאירים פרטים — הרשמה למועד בירושלים או בתל אביב, או פשוט לקבל עדכונים על מועדים נוספים.</p>
         <div class="reassure">
           <div>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -286,7 +287,7 @@
               <label>
                 <input type="radio" name="edition" value="URU · תל אביב" />
                 <span class="box"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
-                <span class="pick-body"><b>הרשמה מוקדמת — תל אביב</b><span class="soon">URU · עדיין אין תאריך · אעדכן אתכם ראשונים</span></span>
+                <span class="pick-body"><b>להירשם למועד בתל אביב</b><span>URU · שישי 3.7 · 11:00 · 180 ₪ · כולל שקית פולים</span></span>
               </label>
               <label>
                 <input type="radio" name="edition" value="עדכונים — סדנת חליטות" />
@@ -393,8 +394,8 @@
       var ed = getEdition();
       if (note) note.style.color = '';
       if (isTLV(ed)) {
-        if (btn) btn.textContent = 'עדכנו אותי על תל אביב';
-        if (note) note.textContent = 'אין תשלום בשלב הזה — רק עדכון כשייקבע תאריך ל-URU.';
+        if (btn) btn.textContent = 'שמרו לי מקום';
+        if (note) note.textContent = 'לינק לתשלום יישלח ידנית. המקום נשמר אחרי אישור התשלום.';
       } else if (isUpdates(ed)) {
         if (btn) btn.textContent = 'עדכנו אותי על מועדים';
         if (note) note.textContent = isEspresso(ed)
@@ -472,10 +473,10 @@
       var title = document.getElementById('thanksTitle');
       var body = document.getElementById('thanksBody');
       if (isTLV(ed)) {
-        requestTypeField.value = 'הרשמה מוקדמת — URU · תל אביב';
-        subjectField.value = 'הרשמה מוקדמת — URU תל אביב';
-        if (title) title.textContent = 'רשמנו אתכם לתל אביב!';
-        if (body) body.innerHTML = 'עדיין אין תאריך לסדנה ב-URU — אבל אתם ראשונים בתור.<br />ברגע שייקבע מועד אשלח לכם הודעה עם כל הפרטים.';
+        requestTypeField.value = 'הרשמה — URU · תל אביב · שישי 3.7 11:00';
+        subjectField.value = 'הרשמה חדשה — URU תל אביב 3.7';
+        if (title) title.textContent = 'תודה שנרשמתם לתל אביב!';
+        if (body) body.innerHTML = 'לינק לתשלום ב-Bit או PayBox יישלח אליכם בהקדם.<br />המקום נשמר אחרי אישור התשלום.';
       } else if (isUpdates(ed)) {
         if (isEspresso(ed)) {
           requestTypeField.value = 'התעניינות כללית — סדנת אספרסו';
