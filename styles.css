@@ -107,7 +107,7 @@ a { color: inherit; }
 .brand { display: flex; align-items: baseline; gap: 10px; font-family: var(--font-head); font-size: 21px; font-weight: 600; }
 .brand small { font-family: var(--font-body); font-size: 13px; font-weight: 500; color: var(--ink-soft); letter-spacing: .02em; }
 .head-cta { font-size: 16px; padding: 11px 22px; }
-@media (max-width: 620px) { .head-cta { display: none; } }
+@media (max-width: 620px) { .head-cta { font-size: 14px; padding: 9px 16px; } }
 
 /* ---------- hero ---------- */
 .hero { padding: 70px 0 30px; }

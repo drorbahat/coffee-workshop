@@ -4,6 +4,14 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>סדנאות קפה מעשיות — דרור בהט · ירושלים ותל אביב</title>
+<meta name="description" content="סדנאות קפה בקבוצות קטנות בבתי קלייה — קנופי ירושלים ו-URU תל אביב. חליטות ביתיות: V60, אירו־פרס, פרנץ׳ פרס ומקינטה. כולל שקית פולים הביתה." />
+<meta property="og:title" content="סדנאות קפה מעשיות — דרור בהט" />
+<meta property="og:description" content="קבוצה קטנה, טעימות ותרגול בבתי קלייה בירושלים ותל אביב. יוצאים עם הכלים להכין קפה טוב בבית — ושקית פולים." />
+<meta property="og:image" content="https://drorbahat.github.io/coffee-workshop/images/og-share.jpg" />
+<meta property="og:url" content="https://drorbahat.github.io/coffee-workshop/" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="he_IL" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;600;700&family=Assistant:wght@400;500;600;700&family=Noto+Serif+Hebrew:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -118,7 +126,7 @@
   <div class="wrap">
     <div class="about-grid">
       <div class="about-photo reveal" data-reveal>
-        <img class="photo-fill" src="images/dror-pour.jpg" alt="דרור מוזג חליטת V60" />
+        <img class="photo-fill" loading="lazy" src="images/dror-pour.jpg" alt="דרור מוזג חליטת V60" />
       </div>
       <div class="reveal" data-reveal>
         <span class="idx">02 — מי מעביר</span>
@@ -154,7 +162,7 @@
         </ul>
       </div>
       <div class="partner-photo reveal" data-reveal>
-        <img class="photo-fill" src="images/roastery-beans.jpg" alt="בדיקת פולים קלויים בבית הקלייה" />
+        <img class="photo-fill" loading="lazy" src="images/roastery-beans.jpg" alt="בדיקת פולים קלויים בבית הקלייה" />
       </div>
     </div>
   </div>
@@ -370,8 +378,6 @@
   </div>
 </footer>
 
-<div id="tweaks-root"></div>
-
 <!-- scripts -->
 <script>
   (function () {
@@ -541,11 +547,5 @@
     setTimeout(function () { document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); }); }, 2500);
   })();
 </script>
-
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
-<script type="text/babel" src="tweaks-panel.jsx"></script>
-<script type="text/babel" src="tweaks.jsx"></script>
 </body>
 </html>
