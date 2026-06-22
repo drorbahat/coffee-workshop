@@ -426,6 +426,7 @@
     // a safe "open" default. Cross-origin CORS only succeeds on the live
     // GitHub Pages origin — in preview it fails silently and stays "open".
     var WORKER_STATUS_URL = 'https://coffee-workshop-admin.drorbahat.workers.dev/api/status';
+    var WORKER_REGISTER_URL = 'https://coffee-workshop-admin.drorbahat.workers.dev/api/register';
     var jeruFull = false;
     var jeruSeatsLeft = null;
     var tlvFull = false;
@@ -544,19 +545,120 @@
 
       if (btn) { btn.disabled = true; btn.textContent = 'שולח…'; }
 
-      fetch(form.action, {
-        method: 'POST',
-        body: new FormData(form),
-        headers: { 'Accept': 'application/json' }
-      }).then(function (r) {
-        if (!r.ok) throw new Error('formspree');
-        card.classList.add('is-done');
-      }).catch(function () {
-        // network/Formspree error — let the user know, don't lose their place
-        if (btn) btn.disabled = false;
+      // ---- dual-submit shadow mode with per-endpoint timeout ----
+      var clientSubmissionId = 'landing_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+      // FormData for Formspree (primary) — include shared correlation id
+      var formspreeFd = new FormData(form);
+      formspreeFd.append('client_submission_id', clientSubmissionId);
+
+      // FormData for Worker (shadow) — clone form data and add worker-only fields
+      var workerFd = new FormData(form);
+      workerFd.append('client_submission_id', clientSubmissionId);
+      workerFd.append('imported_from', 'landing_shadow');
+      workerFd.append('workshop', 'חליטות ביתיות');
+      workerFd.append('seats', '1');
+
+      if (isTLV(ed)) {
+        workerFd.append('workshop_date', 'שישי 3.7 11:00–12:30');
+        workerFd.append('amount_ils', '200');
+        workerFd.append('registration_status', tlvFull ? 'waitlist' : 'new');
+      } else if (isUpdates(ed)) {
+        workerFd.append('workshop_date', '');
+        workerFd.append('amount_ils', '');
+        workerFd.append('registration_status', 'lead');
+      } else {
+        workerFd.append('workshop_date', 'שני 15.6 16:00–17:30');
+        workerFd.append('amount_ils', '180');
+        workerFd.append('registration_status', jeruFull ? 'waitlist' : 'new');
+      }
+
+      var TIMEOUT_MS = 15000;
+      var formspreeOk = false;
+      var workerOk = false;
+      var formspreeDone = false;
+      var workerDone = false;
+
+      function onFormspreeFinish(ok) {
+        formspreeDone = true;
+        if (ok) {
+          formspreeOk = true;
+          card.classList.add('is-done');
+        }
+        checkSettled();
+      }
+
+      function onWorkerFinish(ok) {
+        workerDone = true;
+        if (ok) {
+          workerOk = true;
+          card.classList.add('is-done');
+        }
+        checkSettled();
+      }
+
+      function checkSettled() {
+        if (!formspreeDone || !workerDone) { return; }
+
+        if (formspreeOk && workerOk) {
+          // both succeeded — no action needed
+          return;
+        }
+
+        if (formspreeOk || workerOk) {
+          // one endpoint succeeded, the other failed — log warning only
+          if (formspreeOk) {
+            console.warn('[shadow] formspree succeeded, worker failed or timed out');
+          } else {
+            console.warn('[shadow] worker succeeded, formspree failed or timed out');
+          }
+          return;
+        }
+
+        // both failed — show user-facing error
+        if (btn) { btn.disabled = false; }
         updateCta();
-        if (note) { note.textContent = 'משהו השתבש בשליחה. נסו שוב, או שלחו לי הודעה באינסטגרם @dror.coffee'; note.style.color = '#b3402f'; }
-      });
+        if (note) {
+          note.textContent = 'משהו השתבש בשליחה. נסו שוב, או שלחו לי הודעה באינסטגרם @dror.coffee';
+          note.style.color = '#b3402f';
+        }
+      }
+
+      // ES5-safe timeout wrapper — no AbortController dependency
+      function fetchWithTimeout(url, opts, timeoutMs, callback) {
+        var finished = false;
+        var timer = setTimeout(function () {
+          if (!finished) { finished = true; callback(false); }
+        }, timeoutMs);
+
+        fetch(url, opts).then(function (r) {
+          if (!finished) {
+            finished = true;
+            clearTimeout(timer);
+            callback(r.ok);
+          }
+        }).catch(function () {
+          if (!finished) {
+            finished = true;
+            clearTimeout(timer);
+            callback(false);
+          }
+        });
+      }
+
+      // Send to Formspree (primary/old provider) with timeout
+      fetchWithTimeout(form.action, {
+        method: 'POST',
+        body: formspreeFd,
+        headers: { 'Accept': 'application/json' }
+      }, TIMEOUT_MS, onFormspreeFinish);
+
+      // Send to Worker (shadow) with timeout
+      fetchWithTimeout(WORKER_REGISTER_URL, {
+        method: 'POST',
+        body: workerFd,
+        headers: { 'Accept': 'application/json' }
+      }, TIMEOUT_MS, onWorkerFinish);
     });
 
     // reveal on scroll — position-based, with a hard safety net so content
