@@ -9,5 +9,11 @@ workers_dev = true
 binding = "COFFEE_WORKSHOP"
 id = "135aa6af7172480892121faad894db07"
 
+# D1 database for registration storage.
+[[d1_databases]]
+binding = "coffee_workshop_registrations"
+database_name = "coffee_workshop_registrations"
+database_id = "62da1381-69c3-4378-a11a-cb41d595d9b8"
+
 [vars]
 ALLOWED_ORIGIN = "https://drorbahat.github.io"
