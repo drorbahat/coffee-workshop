@@ -470,10 +470,14 @@ export const adminClientJs = `
     el.innerHTML=Object.entries(summary).map(([key,ws])=>{
       const title=labels[key]||key;
       const openDot=ws.open?'🟢':'🔴';
-      const mismatchHtml=ws.mismatch
-        ? '<div class="capacity-mismatch">⚠️ פער: האתר מראה '+ws.public_confirmed+', שילמו '+ws.paid_seats+'</div>'
+      const needsWarning=ws.paid_seats>ws.public_confirmed||ws.paid_seats>ws.capacity;
+      const reservedHtml=ws.manual_reserved>0
+        ? '<div class="capacity-reserved-note">'+ws.manual_reserved+' מקומות שמורים ידנית</div>'
         : '';
-      return '<div class="capacity-card'+(ws.mismatch?' capacity-mismatch-card':'')+'">'+
+      const mismatchHtml=needsWarning
+        ? '<div class="capacity-mismatch">⚠️ בעיה: שילמו '+ws.paid_seats+', אבל האתר סופר '+ws.public_confirmed+'</div>'
+        : reservedHtml;
+      return '<div class="capacity-card'+(needsWarning?' capacity-mismatch-card':'')+'">'+
         '<div class="capacity-title">'+openDot+' '+esc(title)+'</div>'+
         '<div class="capacity-numbers">'+
           '<span class="capacity-num">'+ws.paid_seats+'</span>/<span class="capacity-den">'+ws.capacity+'</span>'+
