@@ -68,28 +68,31 @@ export const adminClientJs = `
     const date=reg.workshop_date||reg.date||(ws?ws.date_label:'');
     const startTime=ws?ws.start_time:'';
     const endTime=ws?ws.end_time:'';
-    const timeStr=startTime?(', '+startTime+(endTime?'–'+endTime:'')):'';
+    const timeLine=(date||startTime)?((date||'')+(startTime?', '+startTime+(endTime?'–'+endTime:''):'')):'';
     const amount=reg.amount_ils||(ws?ws.price:null);
     const seats=reg.seats||1;
     const isGroup=seats>1;
-    const wsLabel=ws?(ws.workshop_type||ws.title||'סדנת חליטות'):'סדנת קפה';
-    const venueStr=ws?(ws.venue+(ws.address?', '+ws.address:'')):'';
+    const wsLabel=ws?(ws.workshop_type||ws.title||'סדנת חליטות ביתיות'):'סדנת קפה';
+    const venueLine=ws&&ws.venue?(ws.venue+(ws.address?' - '+ws.address:'')):'';
 
-    let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+String.fromCharCode(10);
+    let msg='היי '+name+', מה קורה?'+String.fromCharCode(10)+String.fromCharCode(10);
+    msg+='נרשמת אצלי להרשמה המוקדמת ל'+wsLabel+' — אז מעדכן שנפתח מועד :)'+String.fromCharCode(10)+String.fromCharCode(10);
+    if(timeLine) msg+=timeLine+String.fromCharCode(10)+String.fromCharCode(10);
+    if(venueLine) msg+=venueLine+String.fromCharCode(10)+String.fromCharCode(10);
 
-    if(ws&&ws.venue){
-      msg+='ראיתי שנרשמת ל'+wsLabel+' ב'+venueStr+(date?', '+date:'')+timeStr+'.'+String.fromCharCode(10);
-    }else{
-      msg+='תודה שנרשמת ל'+wsLabel+(date?' ב'+date:'')+timeStr+'!'+String.fromCharCode(10);
+    if((wsLabel||'').includes('חליט')){
+      msg+='זו סדנת חליטות ביתיות: איך להכין קפה יותר טוב בבית, להבין מה משפיע על הטעם, מה באמת חשוב בציוד, ואיך לעבוד עם מתכון בלי להסתבך.'+String.fromCharCode(10)+String.fromCharCode(10);
+      msg+='נטעם, נשווה, ונעבור על V60, אירופרס, פרנץ׳ פרס ועוד.'+String.fromCharCode(10)+String.fromCharCode(10);
     }
 
     if(amount){
       const total=amount*seats;
-      msg+=String.fromCharCode(10)+'כדי לשמור '+(isGroup?'מקומות':'מקום')+', אפשר להעביר ביט על סך '+total+' ש״ח'+(isGroup?' ('+seats+' מקומות × ₪'+amount+')':'')+'.'+String.fromCharCode(10);
-    }else{
-      msg+=String.fromCharCode(10)+'מחכה לראות אותך בסדנה!'+String.fromCharCode(10);
+      msg+=amount+' ש״ח למשתתף, כולל שקית קפה 250 גרם הביתה.'+String.fromCharCode(10)+String.fromCharCode(10);
+      if(isGroup) msg+='ל'+seats+' משתתפים זה יוצא '+total+' ש״ח בסך הכול.'+String.fromCharCode(10)+String.fromCharCode(10);
+      msg+='אם זה מתאים לך ובא לך להצטרף, תכתוב לי ואשלח בקשת תשלום בביט.'+String.fromCharCode(10)+String.fromCharCode(10);
+      msg+='ברגע שהתשלום עובר — '+(isGroup?'המקומות שלכם שמורים.':'המקום שלך שמור.')+String.fromCharCode(10)+String.fromCharCode(10);
     }
-    msg+=String.fromCharCode(10)+'כל שאלה — אני כאן.';
+    msg+='אם יש שאלה לפני, בכיף 🙂';
     return msg;
   }
   function waUrlWithMessage(reg){
