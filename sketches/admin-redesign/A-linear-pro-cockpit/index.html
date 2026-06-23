@@ -687,93 +687,93 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI','Rubi
      ============================================================ -->
 <script>
 // ============================================================
-// DATA — realistic registrations from context
+// DATA — sample registrations (fictional — for prototype UI only)
 // ============================================================
 const registrations = [
   {
-    id: 1, name: 'שניר פוקס', phone: '050-2234126',
+    id: 1, name: 'אבי כהן', phone: '050-1111114',
     workshop: 'URU תל אביב', seats: 2, source: 'אתר',
     payment: 'נשלחה בקשת BIT', whatsapp: 'נשלחה פנייה',
-    status: 'צריך מעקב תשלום', note: 'נרשמה עבורה ועבור בעלה',
+    status: 'צריך מעקב תשלום', note: 'דוגמה — הרשמה קבוצתית',
     date: '2026-06-21T14:30:00', lane: 'waiting'
   },
   {
-    id: 2, name: 'יונתן נובוטני', phone: '052-6508860',
+    id: 2, name: 'יואב שרון', phone: '050-1111111',
     workshop: 'URU תל אביב', seats: 0, source: 'אתר',
     payment: 'ממתין', whatsapp: 'נשלחה פנייה',
-    status: 'נרשם אצל שני', note: 'בעלה של שניר — כלול בהרשמה שלה',
+    status: 'כלול בהרשמה', note: 'דוגמה — משתתף בהרשמה קבוצתית',
     date: '2026-06-21T14:35:00', lane: 'closed'
   },
   {
-    id: 3, name: 'יאנה סיליוטין', phone: '054-2519667',
+    id: 3, name: 'מיכל ברק', phone: '050-1111112',
     workshop: 'URU תל אביב', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'ממתין',
     status: 'צריך מעקב תשלום',
-    note: 'נרשמה מוקדם וגם שוב למועד 3.7; המספר המלא 0542519667',
+    note: 'דוגמה — נרשמה מספר פעמים; צורך פולואפ',
     date: '2026-06-20T09:15:00', lane: 'needs'
   },
   {
-    id: 4, name: 'הילה לוין', phone: '054-3178959',
+    id: 4, name: 'דנה אברהם', phone: '050-1111113',
     workshop: 'URU תל אביב', seats: 1, source: 'חבר/ה',
     payment: 'ממתין', whatsapp: 'ממתין',
-    status: 'חדש', note: 'הרשמה אמיתית ל-URU 3.7; הופיעה בספאם בפורמספרי 21.6 15:33',
+    status: 'חדש', note: 'דוגמה — הרשמה חדשה',
     date: '2026-06-21T15:33:00', lane: 'needs'
   },
   {
-    id: 5, name: 'יאיר לביא', phone: '050-9862802',
+    id: 5, name: 'יוסי לוי', phone: '050-1111116',
     workshop: 'URU תל אביב', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'נשלחה פנייה',
-    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    status: 'חדש', note: 'דוגמה — נרשם מוקדם; נשלחה וואטסאפ',
     date: '2026-06-15T11:00:00', lane: 'waiting'
   },
   {
-    id: 6, name: 'הדר לוטטי', phone: '050-2373983',
+    id: 6, name: 'נועה אמיר', phone: '050-1111118',
     workshop: 'URU תל אביב', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'נשלחה פנייה',
-    status: 'חדש', note: 'נרשמה לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    status: 'חדש', note: 'דוגמה — נרשמה מוקדם; נשלחה וואטסאפ',
     date: '2026-06-16T08:20:00', lane: 'waiting'
   },
   {
-    id: 7, name: 'סאן לקסמן', phone: '050-9024030',
+    id: 7, name: 'גל אדרי', phone: '050-1111120',
     workshop: 'URU תל אביב', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'נשלחה פנייה',
-    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    status: 'חדש', note: 'דוגמה — נרשם מוקדם; נשלחה וואטסאפ',
     date: '2026-06-17T12:45:00', lane: 'waiting'
   },
   {
-    id: 8, name: 'דניאל יצחק', phone: '053-4277207',
+    id: 8, name: 'טל אלון', phone: '050-1111123',
     workshop: 'URU תל אביב', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'נשלחה פנייה',
-    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    status: 'חדש', note: 'דוגמה — נרשם מוקדם; נשלחה וואטסאפ',
     date: '2026-06-18T16:10:00', lane: 'waiting'
   },
   {
-    id: 9, name: 'יפתח גל', phone: '050-2057819',
+    id: 9, name: 'רותם גולן', phone: '050-1111117',
     workshop: 'קנופי ירושלים', seats: 2, source: 'חבר/ה',
     payment: 'שולם', whatsapp: 'נשלחה פנייה',
-    status: 'סגור', note: 'שולם — מקום שמור',
+    status: 'סגור', note: 'דוגמה — שולם, מקום שמור',
     date: '2026-06-10T10:30:00', lane: 'closed'
   },
   {
-    id: 10, name: 'חסידה', phone: '052-8568210',
+    id: 10, name: 'נועם אלון', phone: '050-1111121',
     workshop: 'קנופי ירושלים', seats: 1, source: 'אינסטגרם',
     payment: 'שולם', whatsapp: 'נשלחה פנייה',
-    status: 'סגור', note: 'שולם — מקום שמור',
+    status: 'סגור', note: 'דוגמה — שולם, מקום שמור',
     date: '2026-06-12T13:00:00', lane: 'closed'
   },
   {
-    id: 11, name: 'דאלי גורדון', phone: '054-4643263',
+    id: 11, name: 'תמר רון', phone: '050-1111122',
     workshop: 'קנופי ירושלים', seats: 1, source: 'אחר',
     payment: 'שולם', whatsapp: 'נשלחה פנייה',
-    status: 'סגור', note: 'שולם — מקום שמור',
+    status: 'סגור', note: 'דוגמה — שולם, מקום שמור',
     date: '2026-06-14T09:00:00', lane: 'closed'
   },
   {
-    id: 12, name: 'Liraz Hashai', phone: '+972-***4751',
+    id: 12, name: 'Shira Melamed', phone: '+972-***9999',
     workshop: 'עדכונים אספרסו', seats: 1, source: 'אתר',
     payment: 'ממתין', whatsapp: 'ממתין',
     status: 'לא טופל',
-    note: 'עדכוני אספרסו — לא רלוונטי לסדנת פילטר נוכחית אלא אם דרור יחליט אחרת',
+    note: 'דוגמה — עדכוני אספרסו, טלפון מסוך',
     date: '2026-06-05T20:00:00', lane: 'needs'
   }
 ];

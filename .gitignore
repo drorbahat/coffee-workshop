@@ -1,5 +1,28 @@
-images/originals/
+# Secrets / local state
 worker/.wrangler/
+worker/.dev.vars
+.env
+
+# Generated images / screenshots
+images/originals/
 screenshot-*.png
+
+# Data files — never commit CSV exports or backups
+*.csv
+*.bak
+*.orig
+
+# Design / prototype screenshots
+design/**/screenshots/
+
+# Sketch work-in-progress
+sketches/**/scratch/
+
+# Ignore generated markdown but allow specific project docs
 *.md
-tweaks*.jsx
+!README.md
+!ARCHITECTURE.md
+!CODEX_HANDOFF.md
+!INTEGRATION_PATTERNS.md
+!landing-ux-plan.md
+!docs/admin-operator-guide.md
