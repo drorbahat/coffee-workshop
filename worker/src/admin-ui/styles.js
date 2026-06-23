@@ -342,6 +342,15 @@ body{
   font-weight:600;
 }
 
+/* Card status row — Sprint 1: single human-readable status + payment */
+.card-status-row{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-bottom:6px;
+}
+
 /* Card action button */
 .card-action-btn{
   display:inline-flex;
@@ -542,6 +551,32 @@ tr.cancelled .sticky-col{opacity:.5}
 }
 .details-field-group{
   margin-bottom:16px;
+}
+
+/* Details hero — Sprint 1: action-first header */
+.details-hero{
+  background:var(--accent-light);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  margin-bottom:16px;
+}
+.details-hero-name{
+  font-size:1.15rem;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.details-hero-meta{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  font-size:.82rem;
+  color:var(--text-secondary);
+  margin-bottom:6px;
+  flex-wrap:wrap;
+}
+.details-hero-workshop{
+  font-weight:600;
 }
 .details-field-group h3{
   font-size:.7rem;

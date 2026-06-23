@@ -103,6 +103,45 @@ export const adminClientJs = `
     return'needs_closing';
   }
 
+  /* ── Sprint 1: Human-readable display status & next-action ── */
+  function computeDisplayStatus(r){
+    const rt=r._record_type||clientRecordType(r);
+    const gm=r._is_group_member||clientIsGroupMember(r);
+    if(Number(r.is_spam)===1)return{text:'ספאם',tone:'muted'};
+    if(r.registration_status==='cancelled'||r.registration_status==='בוטל')return{text:'בוטל',tone:'muted'};
+    if(gm)return{text:'כלול בהרשמה',tone:'muted'};
+    if(r.payment_status==='paid')return{text:'שולם ✓',tone:'ok'};
+    if(r.payment_status==='bit_request_sent')return{text:'מחכה לתשלום',tone:'wait'};
+    if(rt==='lead'){
+      if(r.registration_status==='interested'||r.crm_stage==='interested')return{text:'חזר מעוניין',tone:'ok'};
+      if(r.whatsapp_status==='pending')return{text:'צריך הודעה',tone:'need'};
+      if(r.whatsapp_status==='awaiting_reply')return{text:'מחכה לתשובה',tone:'wait'};
+      if(r.whatsapp_status==='outreach_sent'||r.whatsapp_status==='sent')return{text:'הודעה נשלחה',tone:'ok'};
+      if(r.whatsapp_status==='replied_interested')return{text:'חזר מעוניין',tone:'ok'};
+      return{text:'ליד פתוח',tone:'wait'};
+    }
+    if(r.whatsapp_status==='pending'||r.registration_status==='not_handled')return{text:'צריך הודעה',tone:'need'};
+    if(r.whatsapp_status==='awaiting_reply')return{text:'מחכה לתשובה',tone:'wait'};
+    if(r.whatsapp_status==='outreach_sent'||r.whatsapp_status==='sent')return{text:'הודעה נשלחה',tone:'ok'};
+    if(r.whatsapp_status==='replied_interested')return{text:'חזר מעוניין',tone:'ok'};
+    return{text:'מחכה לטיפול',tone:'wait'};
+  }
+
+  function computeNextAction(r){
+    const rt=r._record_type||clientRecordType(r);
+    const gm=r._is_group_member||clientIsGroupMember(r);
+    if(Number(r.is_spam)===1||r.registration_status==='cancelled'||gm)return{label:'פתח פרטים',action:'details',tone:'secondary'};
+    if(r.payment_status==='paid')return{label:'פתח פרטים',action:'details',tone:'secondary'};
+    if(r.payment_status==='bit_request_sent')return{label:'סמן שולם',action:'mark_paid',tone:'primary'};
+    if(rt==='lead'){
+      if(r.registration_status==='interested'||r.crm_stage==='interested')return{label:'פתח פרטים',action:'details',tone:'secondary'};
+      if(r.whatsapp_status==='pending'&&r.wa_phone)return{label:'פתח WhatsApp',action:'open_wa',tone:'primary'};
+      return{label:'פתח פרטים',action:'details',tone:'secondary'};
+    }
+    if(r.whatsapp_status==='pending'&&r.wa_phone)return{label:'פתח WhatsApp',action:'open_wa',tone:'primary'};
+    return{label:'פתח פרטים',action:'details',tone:'secondary'};
+  }
+
   function wk(r){
     const t=''+(r.edition||'')+' '+(r.request_type||'')+' '+(r.workshop||'');
     if(t.includes('URU')||t.includes('תל אביב'))return'uru';
@@ -141,7 +180,12 @@ export const adminClientJs = `
       _is_group_member:gm,
       _payment_included:gm,  // flag: payment is covered by parent
       _is_billable:clientIsBillableRow(row),
-      wa_phone:normPhone(row.phone)
+      wa_phone:normPhone(row.phone),
+      // Sprint 1: human-readable computed fields
+      display_status:computeDisplayStatus(row).text,
+      display_tone:computeDisplayStatus(row).tone,
+      next_action_label:computeNextAction(row).label,
+      next_action_key:computeNextAction(row).action,
     };
   }
 
@@ -449,11 +493,15 @@ export const adminClientJs = `
         seatsStr+amountStr+memberInfo+
       '</div>'+
       extraLine+
-      '<div class="card-tags">'+
-        '<span class="tag '+(r.whatsapp_status==='pending'?'tag-need':r.whatsapp_status==='outreach_sent'||r.whatsapp_status==='sent'?'tag-ok':'tag-muted')+'">'+esc(r.whatsapp_label)+'</span>'+
-        '<span class="tag '+payTagClass+'">'+esc(r.payment_label)+'</span>'+
-        '<span class="tag '+(r.registration_status==='confirmed'?'tag-ok':r.registration_status==='cancelled'?'tag-need':'tag-wait')+'">'+esc(r.registration_label)+'</span>'+
-        (r.crm_stage?'<span class="tag tag-wait">'+esc(r.crm_stage_label)+'</span>':'')+
+      '<div class="card-status-row">'+
+        '<span class="tag tag-'+r.display_tone+'" style="font-size:.75rem;padding:3px 10px">'+esc(r.display_status)+'</span>'+
+        (r._payment_included
+          ? '<span class="tag tag-muted">'+esc(r.payment_label)+'</span>'
+          : r.payment_status==='paid'
+            ? '<span class="tag tag-ok">שולם</span>'
+            : r.payment_status==='bit_request_sent'
+              ? '<span class="tag tag-wait">מחכה לתשלום</span>'
+              : (r.amount_ils?'<span class="tag tag-need" style="direction:ltr;unicode-bidi:isolate">₪'+r.amount_ils+'</span>':''))+
       '</div>'+
       actionBtn+
     '</div>';
@@ -628,94 +676,98 @@ export const adminClientJs = `
     }
 
     body.innerHTML=
-      // 1. Current status (prominent read-only display)
-      '<div class="details-field-group">'+
-        '<h3>מצב נוכחי</h3>'+
-        '<div class="details-field" style="grid-column:1/-1">'+
-          '<span class="tag '+statusClass+'" style="font-size:.9rem;padding:6px 14px">'+esc(statusText)+'</span>'+
+      // 1. Person + Workshop + Status (action-first header)
+      '<div class=\"details-field-group details-hero\">'+
+        '<div class=\"details-hero-name\">'+esc(reg.name)+'</div>'+
+        '<div class=\"details-hero-meta\">'+
+          '<span class=\"details-hero-workshop\">'+esc(reg.edition||reg.workshop||'—')+'</span>'+
+          '<span class=\"ltr\" style=\"font-size:.85rem\">'+esc(reg.phone)+'</span>'+
+        '</div>'+
+        '<div class=\"details-hero-status\">'+
+          '<span class=\"tag tag-'+statusClass+'\" style=\"font-size:.9rem;padding:6px 14px\">'+esc(statusText)+'</span>'+
         '</div>'+
       '</div>'+
-      // 2. Relationship management
-      '<div class="details-field-group">'+
+      // 2. Editable contact/workshop details
+      '<div class=\"details-field-group\">'+
+        '<h3>פרטי הרשמה</h3>'+
+        '<div class=\"details-field\"><span class=\"field-label\">שם</span><input class=\"details-input\" id=\"det-name\" value=\"'+escAttr(reg.name)+'\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">טלפון</span><input class=\"details-input ltr\" id=\"det-phone\" value=\"'+escAttr(reg.phone)+'\" style=\"direction:ltr;text-align:left\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">אימייל</span><span class=\"field-value ltr\">'+esc(reg.email||'—')+'</span></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">נרשם</span><span class=\"field-value ltr\">'+(reg.created_at?fmtDate(reg.created_at):'—')+'</span></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">סדנה</span><input class=\"details-input\" id=\"det-edition\" value=\"'+escAttr(reg.edition||'')+'\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">תאריך</span><input class=\"details-input\" id=\"det-date\" value=\"'+escAttr(reg.workshop_date||reg.date||'')+'\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">מקומות</span><input class=\"details-input\" id=\"det-seats\" type=\"number\" value=\"'+(reg.seats??1)+'\" style=\"width:70px\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">סכום</span><span class=\"field-value ltr\">'+(reg.amount_ils!=null?'₪'+reg.amount_ils:'—')+'</span></div>'+
+        (gm?'<div class=\"details-field\" style=\"grid-column:1/-1\"><span class=\"field-label\">הסבר</span><span class=\"field-value\" style=\"font-size:.75rem;color:var(--text-tertiary)\">התשלום והמקום מנוהלים דרך ההרשמה הראשית.</span></div>':'')+
+        '<div class=\"details-field\"><span class=\"field-label\">מקור</span><input class=\"details-input\" id=\"det-source\" value=\"'+escAttr(reg.source||'')+'\"></div>'+
+        '<div class=\"details-field\"><span class=\"field-label\">הערות</span><textarea class=\"details-textarea\" id=\"det-notes\" rows=\"3\">'+esc(reg.notes||'')+'</textarea></div>'+
+      '</div>'+
+      // 3. Relationship management (visible but secondary)
+      '<div class=\"details-field-group\">'+
         '<h3>שיוך להרשמה</h3>'+
-        '<div class="details-field"><span class="field-label">שייך להרשמה של</span>'+
-          '<select class="details-select" id="det-parent-registration">'+
-            '<option value="">לא משויך — הרשמה עצמאית</option>'+
+        '<div class=\"details-field\"><span class=\"field-label\">שייך להרשמה של</span>'+
+          '<select class=\"details-select\" id=\"det-parent-registration\">'+
+            '<option value=\"\">לא משויך — הרשמה עצמאית</option>'+
             parentOptionTags+
           '</select>'+
         '</div>'+
         (gm
-          ? '<button class="details-action-btn secondary" id="det-unlink-attendee" style="margin-top:6px">הפוך להרשמה עצמאית</button>'
-          : '<button class="details-action-btn secondary" id="det-convert-to-attendee" style="margin-top:6px">שייך להרשמה קיימת</button>')+
+          ? '<button class=\"details-action-btn secondary\" id=\"det-unlink-attendee\" style=\"margin-top:6px\">הפוך להרשמה עצמאית</button>'
+          : '<button class=\"details-action-btn secondary\" id=\"det-convert-to-attendee\" style=\"margin-top:6px\">שייך להרשמה קיימת</button>')+
       '</div>'+
-      // 3. Contact + Workshop + Notes (combined)
-      '<div class="details-field-group">'+
-        '<h3>פרטים</h3>'+
-        '<div class="details-field"><span class="field-label">שם</span><input class="details-input" id="det-name" value="'+escAttr(reg.name)+'"></div>'+
-        '<div class="details-field"><span class="field-label">טלפון</span><input class="details-input ltr" id="det-phone" value="'+escAttr(reg.phone)+'" style="direction:ltr;text-align:left"></div>'+
-        '<div class="details-field"><span class="field-label">אימייל</span><span class="field-value ltr">'+esc(reg.email||'—')+'</span></div>'+
-        '<div class="details-field"><span class="field-label">נרשם</span><span class="field-value ltr">'+(reg.created_at?fmtDate(reg.created_at):'—')+'</span></div>'+
-        '<div class="details-field"><span class="field-label">סדנה</span><input class="details-input" id="det-edition" value="'+escAttr(reg.edition||'')+'"></div>'+
-        '<div class="details-field"><span class="field-label">תאריך</span><input class="details-input" id="det-date" value="'+escAttr(reg.workshop_date||reg.date||'')+'"></div>'+
-        '<div class="details-field"><span class="field-label">מקומות</span><input class="details-input" id="det-seats" type="number" value="'+(reg.seats??1)+'" style="width:70px"></div>'+
-        '<div class="details-field"><span class="field-label">סכום</span><span class="field-value ltr">'+(reg.amount_ils!=null?'₪'+reg.amount_ils:'—')+'</span></div>'+
-        (gm?'<div class="details-field" style="grid-column:1/-1"><span class="field-label">הסבר</span><span class="field-value" style="font-size:.75rem;color:var(--text-tertiary)">התשלום והמקום מנוהלים דרך ההרשמה הראשית.</span></div>':'')+
-        '<div class="details-field"><span class="field-label">מקור</span><input class="details-input" id="det-source" value="'+escAttr(reg.source||'')+'"></div>'+
-        '<div class="details-field"><span class="field-label">הערות</span><textarea class="details-textarea" id="det-notes" rows="3">'+esc(reg.notes||'')+'</textarea></div>'+
-      '</div>'+
-      // 4. Advanced statuses (collapsible)
-      '<details class="details-field-group">'+
-        '<summary class="details-summary"><h3 style="display:inline">סטטוסים מתקדמים</h3></summary>'+
-        '<div style="margin-top:8px">'+
-        '<div class="details-field"><span class="field-label">וואטסאפ</span>'+
-          '<select class="details-select" id="det-whatsapp">'+
-            '<option value="pending"'+(reg.whatsapp_status==='pending'?' selected':'')+'>לא נשלחה הודעה</option>'+
-            '<option value="outreach_sent"'+(reg.whatsapp_status==='outreach_sent'?' selected':'')+'>נשלחה הודעה</option>'+
-            '<option value="sent"'+(reg.whatsapp_status==='sent'?' selected':'')+'>נשלחה</option>'+
-            '<option value="awaiting_reply"'+(reg.whatsapp_status==='awaiting_reply'?' selected':'')+'>ממתין לתשובה</option>'+
-            '<option value="replied_interested"'+(reg.whatsapp_status==='replied_interested'?' selected':'')+'>חזר מעוניין</option>'+
+      // 4. Advanced raw statuses (collapsed by default)
+      '<details class=\"details-field-group\">'+
+        '<summary class=\"details-summary\"><h3 style=\"display:inline\">סטטוסים מתקדמים</h3></summary>'+
+        '<div style=\"margin-top:8px\">'+
+        '<div class=\"details-field\"><span class=\"field-label\">וואטסאפ</span>'+
+          '<select class=\"details-select\" id=\"det-whatsapp\">'+
+            '<option value=\"pending\"'+(reg.whatsapp_status==='pending'?' selected':'')+'>לא נשלחה הודעה</option>'+
+            '<option value=\"outreach_sent\"'+(reg.whatsapp_status==='outreach_sent'?' selected':'')+'>נשלחה הודעה</option>'+
+            '<option value=\"sent\"'+(reg.whatsapp_status==='sent'?' selected':'')+'>נשלחה</option>'+
+            '<option value=\"awaiting_reply\"'+(reg.whatsapp_status==='awaiting_reply'?' selected':'')+'>ממתין לתשובה</option>'+
+            '<option value=\"replied_interested\"'+(reg.whatsapp_status==='replied_interested'?' selected':'')+'>חזר מעוניין</option>'+
           '</select>'+
         '</div>'+
         (gm
-          ? '<div class="details-field"><span class="field-label">תשלום</span><span class="field-value"><span class="status-badge tag-muted">'+esc(reg.payment_label)+'</span></span></div>'
-          : '<div class="details-field"><span class="field-label">תשלום</span>'+
-            '<select class="details-select" id="det-payment">'+
-              '<option value="pending"'+(reg.payment_status==='pending'?' selected':'')+'>לא שולם</option>'+
-              '<option value="bit_request_sent"'+(reg.payment_status==='bit_request_sent'?' selected':'')+'>Bit נשלח</option>'+
-              '<option value="paid"'+(reg.payment_status==='paid'?' selected':'')+'>שולם</option>'+
+          ? '<div class=\"details-field\"><span class=\"field-label\">תשלום</span><span class=\"field-value\"><span class=\"status-badge tag-muted\">'+esc(reg.payment_label)+'</span></span></div>'
+          : '<div class=\"details-field\"><span class=\"field-label\">תשלום</span>'+
+            '<select class=\"details-select\" id=\"det-payment\">'+
+              '<option value=\"pending\"'+(reg.payment_status==='pending'?' selected':'')+'>לא שולם</option>'+
+              '<option value=\"bit_request_sent\"'+(reg.payment_status==='bit_request_sent'?' selected':'')+'>Bit נשלח</option>'+
+              '<option value=\"paid\"'+(reg.payment_status==='paid'?' selected':'')+'>שולם</option>'+
             '</select>'+
           '</div>')+
-        '<div class="details-field"><span class="field-label">רישום</span>'+
-          '<select class="details-select" id="det-registration">'+
-            '<option value="new"'+(reg.registration_status==='new'?' selected':'')+'>חדש</option>'+
-            '<option value="confirmed"'+(reg.registration_status==='confirmed'?' selected':'')+'>מאושר</option>'+
-            '<option value="lead"'+(reg.registration_status==='lead'?' selected':'')+'>ליד לעדכונים</option>'+
-            '<option value="interested"'+(reg.registration_status==='interested'?' selected':'')+'>מעוניין</option>'+
-            '<option value="registered"'+(reg.registration_status==='registered'?' selected':'')+'>נרשם</option>'+
-            '<option value="needs_payment_followup"'+(reg.registration_status==='needs_payment_followup'?' selected':'')+'>פולואפ תשלום</option>'+
-            '<option value="not_handled"'+(reg.registration_status==='not_handled'?' selected':'')+'>לא טופל</option>'+
-            '<option value="group_member"'+(reg.registration_status==='group_member'?' selected':'')+'>הרשמה קבוצתית</option>'+
-            '<option value="registered_under_shnir"'+(reg.registration_status==='registered_under_shnir'?' selected':'')+'>הרשמה קבוצתית</option>'+
-            '<option value="cancelled"'+(reg.registration_status==='cancelled'?' selected':'')+'>בוטל</option>'+
+        '<div class=\"details-field\"><span class=\"field-label\">רישום</span>'+
+          '<select class=\"details-select\" id=\"det-registration\">'+
+            '<option value=\"new\"'+(reg.registration_status==='new'?' selected':'')+'>חדש</option>'+
+            '<option value=\"confirmed\"'+(reg.registration_status==='confirmed'?' selected':'')+'>מאושר</option>'+
+            '<option value=\"lead\"'+(reg.registration_status==='lead'?' selected':'')+'>ליד לעדכונים</option>'+
+            '<option value=\"interested\"'+(reg.registration_status==='interested'?' selected':'')+'>מעוניין</option>'+
+            '<option value=\"registered\"'+(reg.registration_status==='registered'?' selected':'')+'>נרשם</option>'+
+            '<option value=\"needs_payment_followup\"'+(reg.registration_status==='needs_payment_followup'?' selected':'')+'>פולואפ תשלום</option>'+
+            '<option value=\"not_handled\"'+(reg.registration_status==='not_handled'?' selected':'')+'>לא טופל</option>'+
+            '<option value=\"group_member\"'+(reg.registration_status==='group_member'?' selected':'')+'>הרשמה קבוצתית</option>'+
+            '<option value=\"registered_under_shnir\"'+(reg.registration_status==='registered_under_shnir'?' selected':'')+'>הרשמה קבוצתית</option>'+
+            '<option value=\"cancelled\"'+(reg.registration_status==='cancelled'?' selected':'')+'>בוטל</option>'+
           '</select>'+
         '</div>'+
-        '<div class="details-field"><span class="field-label">שלב CRM</span>'+
-          '<select class="details-select" id="det-crm-stage">'+
-            '<option value="">—</option>'+
-            '<option value="open"'+(reg.crm_stage==='open'?' selected':'')+'>פתוח</option>'+
-            '<option value="awaiting_reply"'+(reg.crm_stage==='awaiting_reply'?' selected':'')+'>ממתין לתשובה</option>'+
-            '<option value="interested"'+(reg.crm_stage==='interested'?' selected':'')+'>מעוניין</option>'+
-            '<option value="closing"'+(reg.crm_stage==='closing'?' selected':'')+'>בסגירה</option>'+
-            '<option value="closed"'+(reg.crm_stage==='closed'?' selected':'')+'>סגור</option>'+
-            '<option value="lost"'+(reg.crm_stage==='lost'?' selected':'')+'>אבד</option>'+
+        '<div class=\"details-field\"><span class=\"field-label\">שלב CRM</span>'+
+          '<select class=\"details-select\" id=\"det-crm-stage\">'+
+            '<option value=\"\">—</option>'+
+            '<option value=\"open\"'+(reg.crm_stage==='open'?' selected':'')+'>פתוח</option>'+
+            '<option value=\"awaiting_reply\"'+(reg.crm_stage==='awaiting_reply'?' selected':'')+'>ממתין לתשובה</option>'+
+            '<option value=\"interested\"'+(reg.crm_stage==='interested'?' selected':'')+'>מעוניין</option>'+
+            '<option value=\"closing\"'+(reg.crm_stage==='closing'?' selected':'')+'>בסגירה</option>'+
+            '<option value=\"closed\"'+(reg.crm_stage==='closed'?' selected':'')+'>סגור</option>'+
+            '<option value=\"lost\"'+(reg.crm_stage==='lost'?' selected':'')+'>אבד</option>'+
           '</select>'+
         '</div>'+
-        '<div class="details-field"><span class="field-label">סוג רשומה</span>'+
-          '<select class="details-select" id="det-record-type">'+
-            '<option value="">—</option>'+
-            '<option value="lead"'+(reg.record_type==='lead'||rt==='lead'?' selected':'')+'>ליד</option>'+
-            '<option value="registration"'+(reg.record_type==='registration'||(rt==='registration'&&!reg.record_type)?' selected':'')+'>הרשמה</option>'+
-            '<option value="attendee"'+(reg.record_type==='attendee'||rt==='attendee'?' selected':'')+'>כלול בהרשמה</option>'+
+        '<div class=\"details-field\"><span class=\"field-label\">סוג רשומה</span>'+
+          '<select class=\"details-select\" id=\"det-record-type\">'+
+            '<option value=\"\">—</option>'+
+            '<option value=\"lead\"'+(reg.record_type==='lead'||rt==='lead'?' selected':'')+'>ליד</option>'+
+            '<option value=\"registration\"'+(reg.record_type==='registration'||(rt==='registration'&&!reg.record_type)?' selected':'')+'>הרשמה</option>'+
+            '<option value=\"attendee\"'+(reg.record_type==='attendee'||rt==='attendee'?' selected':'')+'>כלול בהרשמה</option>'+
           '</select>'+
         '</div>'+
         '</div>'+
