@@ -176,6 +176,26 @@ Use this prompt when starting Codex on Mac:
 
 "You are helping me continue my dror.coffee workshop landing page and Cloudflare Worker admin. Read `CODEX_HANDOFF.md` first, then inspect the repo. The working source of truth is the coffee-workshop repo, but make sure you have the latest server copy from `/home/dror/coffee-landing` because many admin files may be uncommitted/untracked there. Do not start coding until you summarize: current architecture, uncommitted status, test commands you found, and the smallest safe plan. Hebrew RTL/mobile UX matters. Admin live URL: https://coffee-workshop-admin.drorbahat.workers.dev/admin/registrations. Dror is product owner, not developer — explain changes as product impact."
 
+## Privacy & sanitization note (applied 2026-06-23)
+
+Prototype/sketch data in `design/prototypes/` and `sketches/` has been sanitized: real names and phone numbers replaced with fictional data (`0501111xxx` series). The following files were sanitized:
+
+- `design/prototypes/registrations-ux/option-a-item-grid.html`
+- `design/prototypes/registrations-ux/option-b-action-lanes.html`
+- `sketches/admin-redesign/A-linear-pro-cockpit/index.html`
+
+**Not sanitized** (would break tests or functionality):
+- `worker/scripts/crm-data-cleanup.mjs` — tests assert on row names
+- `worker/scripts/import-formspree-csv.mjs` — production import script needs real overlay keys
+- `worker/scripts/test-*.mjs` — test fixtures intentionally use realistic data shapes
+
+New files added:
+- `README.md` — project overview, URLs, testing, data safety
+- `docs/admin-operator-guide.md` — Hebrew operator guide for Dror
+- `.gitignore` — updated for CSV, backup, and screenshot patterns
+
+**Do not commit CSV exports** or real personal data. Always use fictional data in prototypes.
+
 ## If files need transfer from server to Mac
 Preferred safe path:
 1. On server, commit current work to a WIP branch and push.
