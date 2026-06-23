@@ -217,7 +217,13 @@ body{
 }
 .capacity-reserved{
   font-size:.72rem;
-  color:var(--amber);
+  color:var(--text-tertiary);
+}
+.capacity-reserved-note{
+  margin-top:6px;
+  font-size:.75rem;
+  font-weight:600;
+  color:var(--blue);
 }
 .capacity-mismatch{
   margin-top:6px;
