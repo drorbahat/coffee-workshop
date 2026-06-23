@@ -48,8 +48,8 @@ export const adminClientJs = `
     const isLead=rtype==='lead'||reg.registration_status==='lead'||reg.workshop_key==='brew_updates'||reg.workshop_key==='espresso_updates';
 
     if(isLead){
-      if(reg.workshop_key==='espresso_updates') return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת אספרסו.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
-      return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת חליטות.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
+      const leadLabel=reg.workshop_key==='espresso_updates'?'אספרסו':'חליטות';
+      return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת '+leadLabel+'.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
     }
 
     // Find workshop config — either from matching workshop_key or from kv key in capacity summary
@@ -66,16 +66,21 @@ export const adminClientJs = `
     }
 
     const date=reg.workshop_date||reg.date||(ws?ws.date_label:'');
+    const startTime=ws?ws.start_time:'';
+    const endTime=ws?ws.end_time:'';
+    const timeStr=startTime?(', '+startTime+(endTime?'–'+endTime:'')):'';
     const amount=reg.amount_ils||(ws?ws.price:null);
     const seats=reg.seats||1;
     const isGroup=seats>1;
+    const wsLabel=ws?(ws.workshop_type||ws.title||'סדנת חליטות'):'סדנת קפה';
+    const venueStr=ws?(ws.venue+(ws.address?', '+ws.address:'')):'';
 
     let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+String.fromCharCode(10);
 
     if(ws&&ws.venue){
-      msg+='ראיתי שנרשמת לסדנת החליטות ב'+ws.venue+(ws.address?', '+ws.address:'')+(date?', '+date:'')+'.'+String.fromCharCode(10);
+      msg+='ראיתי שנרשמת ל'+wsLabel+' ב'+venueStr+(date?', '+date:'')+timeStr+'.'+String.fromCharCode(10);
     }else{
-      msg+='תודה שנרשמת לסדנת הקפה'+(date?' ב'+date:'')+'!'+String.fromCharCode(10);
+      msg+='תודה שנרשמת ל'+wsLabel+(date?' ב'+date:'')+timeStr+'!'+String.fromCharCode(10);
     }
 
     if(amount){
