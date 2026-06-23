@@ -269,7 +269,7 @@ assert(normSrc.includes("waitlist: 'רשימת המתנה'"), 'STATUS_LABELS.reg
 assert(normSrc.includes("row.registration_status === 'waitlist'"), 'computeLane checks for waitlist status');
 
 /* ───── Sprint 4: redirect ───── */
-assert(src.includes("/admin/registrations") && src.includes("302"), '/admin GET redirects to /admin/registrations 302');
+assert(src.includes("redirect('/admin/registrations'") || src.includes('redirect("/admin/registrations"'), '/admin GET redirects to /admin/registrations safely');
 
 /* ───── Summary ───── */
 const total = passed + failed;

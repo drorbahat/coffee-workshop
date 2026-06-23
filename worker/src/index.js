@@ -157,7 +157,7 @@ export default {
 
     if (url.pathname === '/' || url.pathname === '/admin') {
       if (request.method === 'GET') {
-        return Response.redirect('/admin/registrations', 302);
+        return redirect('/admin/registrations', env);
       }
     }
 
