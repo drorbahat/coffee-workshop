@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>קופי — Linear Pro Cockpit</title>
+<style>
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI','Rubik','Noto Sans Hebrew',system-ui,sans-serif;background:#F2F3F5;color:#1A1A1A;line-height:1.4;direction:rtl;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+:root{
+  --bg:#F2F3F5;
+  --surface:#FFFFFF;
+  --surface-hover:#F8F9FA;
+  --text-primary:#1A1A1A;
+  --text-secondary:#6B7280;
+  --text-tertiary:#9CA3AF;
+  --border:#E5E7EB;
+  --border-hairline:1px solid #E5E7EB;
+  --accent:#A67C52;
+  --accent-light:#F5EDE4;
+  --accent-text:#7A5C3A;
+  --badge-needs:#EAB308;
+  --badge-needs-bg:#FEF9E7;
+  --badge-waiting:#94A3B8;
+  --badge-waiting-bg:#F1F5F9;
+  --badge-closed:#86B486;
+  --badge-closed-bg:#EDF7ED;
+  --badge-new:#A67C52;
+  --badge-new-bg:#F5EDE4;
+  --lane-needs-bg:#FFFDF5;
+  --lane-waiting-bg:#FAFBFC;
+  --lane-closed-bg:#F6F9F6;
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:16px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg:0 8px 32px rgba(0,0,0,.08);
+  --header-h:56px;
+  --lane-min-w:300px;
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:2px}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.82);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:var(--border-hairline);
+  padding:0 16px;
+  height:var(--header-h);
+  display:flex;align-items:center;gap:12px;
+  direction:rtl;
+}
+.header-logo{
+  display:flex;align-items:center;gap:6px;
+  font-size:15px;font-weight:600;letter-spacing:-.02em;
+  color:var(--text-primary);
+  white-space:nowrap;
+}
+.header-logo svg{flex-shrink:0}
+.header-meta{
+  display:flex;align-items:center;gap:8px;
+  margin-right:auto;font-size:13px;color:var(--text-secondary);
+}
+.header-count{
+  font-weight:500;color:var(--accent);direction:ltr;display:inline-block;
+}
+.header-actions{display:flex;align-items:center;gap:4px}
+.header-btn{
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  border:none;background:transparent;border-radius:var(--radius-sm);
+  color:var(--text-secondary);cursor:pointer;transition:all .12s;
+}
+.header-btn:hover{background:var(--surface-hover);color:var(--text-primary)}
+.header-btn:active{transform:scale(.92)}
+.header-btn svg{width:18px;height:18px}
+
+/* ============================================================
+   SEARCH BAR
+   ============================================================ */
+.search-bar{
+  display:none;align-items:center;gap:8px;
+  padding:8px 16px;background:var(--surface);
+  border-bottom:var(--border-hairline);
+}
+.search-bar.open{display:flex}
+.search-bar input{
+  flex:1;border:none;background:var(--surface-hover);
+  border-radius:var(--radius-sm);padding:8px 12px;
+  font-size:14px;font-family:inherit;direction:rtl;outline:none;
+  color:var(--text-primary);
+}
+.search-bar input::placeholder{color:var(--text-tertiary)}
+.search-bar .close-search{
+  border:none;background:none;cursor:pointer;color:var(--text-secondary);padding:4px;
+}
+
+/* ============================================================
+   FILTER PILLS
+   ============================================================ */
+.filter-bar{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 16px;overflow-x:auto;white-space:nowrap;
+  border-bottom:var(--border-hairline);
+  background:var(--surface);
+  -webkit-overflow-scrolling:touch;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;font-weight:500;line-height:1;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-secondary);cursor:pointer;transition:all .12s;
+  white-space:nowrap;flex-shrink:0;
+}
+.filter-pill:hover{border-color:#D1D5DB;color:var(--text-primary)}
+.filter-pill.active{
+  border-color:var(--accent);background:var(--accent-light);
+  color:var(--accent-text);
+}
+.filter-pill .count{
+  font-size:11px;font-weight:400;opacity:.6;direction:ltr;
+}
+
+/* ============================================================
+   COCKPIT LANES
+   ============================================================ */
+.cockpit{
+  display:flex;gap:12px;
+  padding:16px;overflow-x:auto;
+  min-height:calc(100dvh - var(--header-h) - 104px);
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x mandatory;
+}
+.lane{
+  flex:0 0 calc(100vw - 48px);max-width:380px;
+  scroll-snap-align:start;
+  display:flex;flex-direction:column;
+  border-radius:var(--radius-md);
+  border:var(--border-hairline);
+  background:var(--surface);
+  min-height:200px;
+}
+.lane-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;
+  border-bottom:var(--border-hairline);
+}
+.lane-title{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--text-primary);
+}
+.lane-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.lane-dot.needs{background:var(--badge-needs)}
+.lane-dot.waiting{background:var(--badge-waiting)}
+.lane-dot.closed{background:var(--badge-closed)}
+.lane-count{
+  font-size:12px;font-weight:500;color:var(--text-tertiary);
+  background:var(--surface-hover);padding:2px 8px;border-radius:10px;
+  direction:ltr;
+}
+.lane-body{
+  flex:1;overflow-y:auto;padding:8px;
+  display:flex;flex-direction:column;gap:4px;
+}
+
+/* ============================================================
+   REGISTRATION CARD (Lane Item)
+   ============================================================ */
+.reg-card{
+  background:var(--surface);border-radius:var(--radius-sm);
+  border:1px solid var(--border);padding:10px 12px;
+  cursor:pointer;transition:all .12s;
+  position:relative;
+}
+.reg-card:hover{border-color:#D1D5DB;background:var(--surface-hover)}
+.reg-card:active{transform:scale(.98)}
+.reg-card-top{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin-bottom:4px;
+}
+.reg-name{
+  font-size:14px;font-weight:500;color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.reg-seats{
+  font-size:11px;color:var(--text-tertiary);
+  background:var(--surface-hover);padding:1px 7px;border-radius:8px;
+  direction:ltr;white-space:nowrap;
+}
+.reg-meta{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:12px;color:var(--text-secondary);
+}
+.reg-date{font-size:11px;color:var(--text-tertiary);direction:ltr}
+.reg-source{font-size:11px;color:var(--text-tertiary)}
+.reg-actions{
+  display:flex;align-items:center;gap:4px;
+  margin-top:6px;padding-top:6px;
+  border-top:1px solid #F3F4F6;
+}
+.action-pill{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:3px 8px;border-radius:4px;
+  font-size:11px;font-weight:500;line-height:1.3;
+  border:none;cursor:pointer;transition:all .12s;
+  white-space:nowrap;
+}
+.action-pill:active{transform:scale(.93)}
+.action-pill.whatsapp{
+  background:#E8F5E9;color:#2E7D32;
+}
+.action-pill.whatsapp:hover{background:#C8E6C9}
+.action-pill.whatsapp.sent{
+  background:#E3F2FD;color:#1565C0;
+}
+.action-pill.bit{
+  background:#FFF3E0;color:#E65100;
+}
+.action-pill.bit:hover{background:#FFE0B2}
+.action-pill.bit.sent{
+  background:#F3E5F5;color:#7B1FA2;
+}
+.action-pill.paid{
+  background:#E8F5E9;color:#2E7D32;
+}
+.action-pill.status{
+  background:var(--accent-light);color:var(--accent-text);
+}
+
+/* ============================================================
+   TABLE VIEW (Desktop / Tablet)
+   ============================================================ */
+.table-view{
+  display:none;padding:0 16px 16px;
+}
+.table-view.visible{display:block}
+.table-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:8px 0;margin-bottom:4px;
+}
+.table-toolbar-left{display:flex;align-items:center;gap:8px}
+.table-view table{
+  width:100%;border-collapse:collapse;
+  font-size:13px;
+}
+.table-view th{
+  text-align:right;font-weight:600;font-size:11px;
+  text-transform:uppercase;letter-spacing:.04em;
+  color:var(--text-tertiary);padding:8px 10px;
+  border-bottom:var(--border-hairline);
+  white-space:nowrap;cursor:pointer;user-select:none;
+  position:sticky;top:0;background:var(--bg);
+}
+.table-view th:hover{color:var(--text-primary)}
+.table-view td{
+  padding:8px 10px;border-bottom:1px solid #F3F4F6;
+  vertical-align:middle;
+}
+.table-view tr{transition:background .1s}
+.table-view tbody tr:hover{background:var(--surface-hover)}
+.table-view tbody tr{cursor:pointer}
+.table-status-dot{
+  display:inline-block;width:6px;height:6px;border-radius:50%;
+  margin-left:6px;vertical-align:middle;
+}
+.td-name{font-weight:500;color:var(--text-primary)}
+.td-phone{color:var(--text-secondary);direction:ltr}
+.td-seats{text-align:center;direction:ltr}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:11px;font-weight:500;line-height:1.4;
+}
+.badge.needs{background:var(--badge-needs-bg);color:#92400E}
+.badge.waiting{background:var(--badge-waiting-bg);color:#475569}
+.badge.closed{background:var(--badge-closed-bg);color:#166534}
+.badge.new{background:var(--badge-new-bg);color:var(--accent-text)}
+
+/* ============================================================
+   BOTTOM SHEET
+   ============================================================ */
+.sheet-overlay{
+  display:none;position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,.32);backdrop-filter:blur(4px);
+  animation:fadeIn .2s ease;
+}
+.sheet-overlay.open{display:block}
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:101;
+  background:var(--surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  max-height:85dvh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{
+  display:flex;justify-content:center;padding:8px 0 0;
+}
+.sheet-handle span{
+  width:32px;height:4px;background:#D1D5DB;border-radius:2px;
+}
+.sheet-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px 8px;
+  border-bottom:var(--border-hairline);
+}
+.sheet-header h2{
+  font-size:17px;font-weight:600;color:var(--text-primary);
+}
+.sheet-close{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border:none;background:transparent;border-radius:var(--radius-sm);
+  cursor:pointer;color:var(--text-secondary);transition:all .12s;
+}
+.sheet-close:hover{background:var(--surface-hover);color:var(--text-primary)}
+.sheet-body{padding:16px 20px 24px}
+.sheet-field{margin-bottom:14px}
+.sheet-field label{
+  display:block;font-size:11px;font-weight:600;color:var(--text-tertiary);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;
+}
+.sheet-field .value{
+  font-size:14px;color:var(--text-primary);
+  background:var(--surface-hover);padding:8px 10px;
+  border-radius:var(--radius-sm);border:1px solid var(--border);
+  min-height:34px;display:flex;align-items:center;gap:6px;
+}
+.sheet-field select,.sheet-field input{
+  width:100%;padding:8px 10px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface);
+  font-size:14px;font-family:inherit;color:var(--text-primary);
+  outline:none;transition:border-color .12s;direction:rtl;
+}
+.sheet-field select:focus,.sheet-field input:focus{
+  border-color:var(--accent);box-shadow:0 0 0 2px rgba(166,124,82,.12);
+}
+.sheet-field textarea{
+  width:100%;padding:8px 10px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--surface);
+  font-size:14px;font-family:inherit;color:var(--text-primary);
+  outline:none;resize:vertical;min-height:60px;
+}
+.sheet-actions{
+  display:flex;gap:8px;margin-top:20px;padding-top:12px;
+  border-top:var(--border-hairline);
+}
+.sheet-btn{
+  flex:1;padding:10px;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;border:none;cursor:pointer;
+  transition:all .12s;font-family:inherit;
+}
+.sheet-btn:active{transform:scale(.97)}
+.sheet-btn.primary{
+  background:var(--accent);color:#fff;
+}
+.sheet-btn.primary:hover{background:#8B693F}
+.sheet-btn.secondary{
+  background:var(--surface-hover);color:var(--text-secondary);
+  border:1px solid var(--border);
+}
+.sheet-btn.secondary:hover{background:#E5E7EB}
+.sheet-btn.danger{
+  background:#FEF2F2;color:#DC2626;
+  border:1px solid #FECACA;
+}
+.sheet-btn.danger:hover{background:#FEE2E2}
+
+/* ============================================================
+   TAB BAR (mobile)
+   ============================================================ */
+.tab-bar{
+  display:flex;align-items:center;justify-content:space-around;
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-top:var(--border-hairline);
+  padding:4px 0 env(safe-area-inset-bottom,4px);
+}
+.tab-btn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  border:none;background:transparent;cursor:pointer;
+  padding:6px 16px;border-radius:var(--radius-sm);
+  transition:all .12s;color:var(--text-tertiary);
+  font-size:10px;font-weight:500;font-family:inherit;
+}
+.tab-btn svg{width:20px;height:20px}
+.tab-btn.active{color:var(--accent)}
+.tab-btn:hover{color:var(--text-secondary)}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty-lane{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:32px 16px;text-align:center;
+  color:var(--text-tertiary);font-size:13px;gap:4px;
+}
+.empty-lane svg{opacity:.3;margin-bottom:4px}
+
+/* ============================================================
+   RESPONSIVE — Desktop
+   ============================================================ */
+@media(min-width:768px){
+  .cockpit{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+  }
+  .lane{
+    flex:1;min-width:var(--lane-min-w);max-width:none;
+    scroll-snap-align:none;
+  }
+  .tab-bar{display:none}
+  .table-view.visible{display:block}
+  .header{padding:0 24px}
+  .sheet{left:auto;right:0;width:420px;border-radius:0;max-height:100dvh;}
+  .sheet-overlay.open{display:block}
+}
+@media(min-width:1024px){
+  .cockpit{padding:20px 24px;gap:16px}
+  .lane-body{padding:10px}
+  .reg-card{padding:12px 14px}
+}
+
+/* ============================================================
+   UTILITY
+   ============================================================ */
+.hidden{display:none!important}
+.fade-in{animation:fadeIn .2s ease}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header" id="header">
+  <div class="header-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 7A2.5 2.5 0 0 0 15 9.5V13a6 6 0 0 1-12 0V4.5A2.5 2.5 0 0 1 5.5 7H17Z"/><path d="M22 7v6a6 6 0 0 1-6 6h-2"/><path d="M22 3v2"/></svg>
+    <span>קופי</span>
+  </div>
+
+  <div class="header-meta">
+    <span>סדנת חליטות ביתיות</span>
+    <span class="header-count" id="totalCount">12</span>
+  </div>
+
+  <div class="header-actions">
+    <button class="header-btn" id="searchToggle" title="חיפוש">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </button>
+    <button class="header-btn" id="viewToggle" title="תצוגת טבלה">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+    </button>
+    <button class="header-btn" title="ייצוא">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="header-btn" title="עוד">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ============================================================
+     SEARCH
+     ============================================================ -->
+<div class="search-bar" id="searchBar">
+  <input type="search" placeholder="חיפוש לפי שם, טלפון, סדנה..." id="searchInput" dir="rtl">
+  <button class="close-search" id="closeSearch">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
+<!-- ============================================================
+     FILTER PILLS
+     ============================================================ -->
+<div class="filter-bar" id="filterBar">
+  <button class="filter-pill active" data-filter="all">הכל <span class="count">12</span></button>
+  <button class="filter-pill" data-filter="uru">URU ת״א <span class="count">8</span></button>
+  <button class="filter-pill" data-filter="canopy">קנופי י-ם <span class="count">3</span></button>
+  <button class="filter-pill" data-filter="espresso">עדכונים <span class="count">1</span></button>
+  <button class="filter-pill" data-filter="needs_followup">צריך מעקב <span class="count">4</span></button>
+  <button class="filter-pill" data-filter="unpaid">לא שולם <span class="count">9</span></button>
+</div>
+
+<!-- ============================================================
+     COCKPIT LANES
+     ============================================================ -->
+<div class="cockpit" id="cockpit">
+
+  <!-- LANE 1 — Needs Action -->
+  <div class="lane" data-lane="needs">
+    <div class="lane-header">
+      <div class="lane-title">
+        <span class="lane-dot needs"></span>
+        טעון טיפול
+      </div>
+      <span class="lane-count" id="laneCount1">3</span>
+    </div>
+    <div class="lane-body" id="laneBody1">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- LANE 2 — Waiting Payment -->
+  <div class="lane" data-lane="waiting">
+    <div class="lane-header">
+      <div class="lane-title">
+        <span class="lane-dot waiting"></span>
+        ממתין לתשלום
+      </div>
+      <span class="lane-count" id="laneCount2">5</span>
+    </div>
+    <div class="lane-body" id="laneBody2">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- LANE 3 — Closed -->
+  <div class="lane" data-lane="closed">
+    <div class="lane-header">
+      <div class="lane-title">
+        <span class="lane-dot closed"></span>
+        סגור
+      </div>
+      <span class="lane-count" id="laneCount3">4</span>
+    </div>
+    <div class="lane-body" id="laneBody3">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     TABLE VIEW (desktop)
+     ============================================================ -->
+<div class="table-view" id="tableView">
+  <div class="table-toolbar">
+    <div class="table-toolbar-left">
+      <span style="font-size:13px;font-weight:500;color:var(--text-secondary)">12 נרשמים</span>
+      <span style="font-size:12px;color:var(--text-tertiary)">·</span>
+      <span style="font-size:12px;color:var(--text-tertiary)">יוצאו 0</span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="filter-pill" style="padding:3px 10px;font-size:11px" onclick="document.querySelector('[data-filter=all]').click()">נקה סינון</button>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>שם</th>
+        <th>טלפון</th>
+        <th>סדנה</th>
+        <th>מקומות</th>
+        <th>תשלום</th>
+        <th>וואטסאפ</th>
+        <th>סטטוס</th>
+        <th>תאריך הרשמה</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <!-- Populated by JS -->
+    </tbody>
+  </table>
+</div>
+
+<!-- ============================================================
+     BOTTOM SHEET / EDIT PANEL
+     ============================================================ -->
+<div class="sheet-overlay" id="sheetOverlay"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"><span></span></div>
+
+  <div class="sheet-header">
+    <h2 id="sheetTitle">פרטי נרשם</h2>
+    <button class="sheet-close" id="sheetClose">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="sheet-body">
+    <div class="sheet-field">
+      <label>שם מלא</label>
+      <input type="text" id="editName" dir="rtl">
+    </div>
+    <div class="sheet-field">
+      <label>טלפון</label>
+      <input type="tel" id="editPhone" dir="ltr">
+    </div>
+    <div class="sheet-field">
+      <label>סדנה</label>
+      <select id="editWorkshop">
+        <option value="URU תל אביב">URU תל אביב</option>
+        <option value="קנופי ירושלים">קנופי ירושלים</option>
+        <option value="עדכונים אספרסו">עדכונים אספרסו</option>
+        <option value="עדכונים פילטר">עדכונים פילטר</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label>מקומות</label>
+      <input type="number" id="editSeats" min="1" max="10">
+    </div>
+    <div class="sheet-field">
+      <label>תשלום</label>
+      <select id="editPayment">
+        <option value="ממתין">ממתין</option>
+        <option value="נשלחה בקשת BIT">נשלחה בקשת BIT</option>
+        <option value="שולם">שולם</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label>וואטסאפ</label>
+      <select id="editWhatsapp">
+        <option value="ממתין">ממתין</option>
+        <option value="נשלחה פנייה">נשלחה פנייה</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label>סטטוס הרשמה</label>
+      <select id="editStatus">
+        <option value="חדש">חדש</option>
+        <option value="צריך מעקב תשלום">צריך מעקב תשלום</option>
+        <option value="נרשם אצל שני">נרשם אצל שני</option>
+        <option value="לא טופל">לא טופל</option>
+      </select>
+    </div>
+    <div class="sheet-field">
+      <label>מקור</label>
+      <input type="text" id="editSource" dir="rtl">
+    </div>
+    <div class="sheet-field">
+      <label>תאריך הרשמה</label>
+      <div class="value" id="editDate" style="direction:ltr;justify-content:flex-start"></div>
+    </div>
+    <div class="sheet-field">
+      <label>הערה</label>
+      <textarea id="editNote" dir="rtl" placeholder="הערה פנימית..."></textarea>
+    </div>
+
+    <div class="sheet-actions">
+      <button class="sheet-btn secondary" id="sheetDelete">מחק נרשם</button>
+      <button class="sheet-btn primary" id="sheetSave">שמור שינויים</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TAB BAR (phone only)
+     ============================================================ -->
+<nav class="tab-bar">
+  <button class="tab-btn active" id="tabLanes">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span>נתיבים</span>
+  </button>
+  <button class="tab-btn" id="tabTable">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span>טבלה</span>
+  </button>
+  <button class="tab-btn" id="tabSummary">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg>
+    <span>סיכום</span>
+  </button>
+</nav>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// ============================================================
+// DATA — realistic registrations from context
+// ============================================================
+const registrations = [
+  {
+    id: 1, name: 'שניר פוקס', phone: '050-2234126',
+    workshop: 'URU תל אביב', seats: 2, source: 'אתר',
+    payment: 'נשלחה בקשת BIT', whatsapp: 'נשלחה פנייה',
+    status: 'צריך מעקב תשלום', note: 'נרשמה עבורה ועבור בעלה',
+    date: '2026-06-21T14:30:00', lane: 'waiting'
+  },
+  {
+    id: 2, name: 'יונתן נובוטני', phone: '052-6508860',
+    workshop: 'URU תל אביב', seats: 0, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'נשלחה פנייה',
+    status: 'נרשם אצל שני', note: 'בעלה של שניר — כלול בהרשמה שלה',
+    date: '2026-06-21T14:35:00', lane: 'closed'
+  },
+  {
+    id: 3, name: 'יאנה סיליוטין', phone: '054-2519667',
+    workshop: 'URU תל אביב', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'ממתין',
+    status: 'צריך מעקב תשלום',
+    note: 'נרשמה מוקדם וגם שוב למועד 3.7; המספר המלא 0542519667',
+    date: '2026-06-20T09:15:00', lane: 'needs'
+  },
+  {
+    id: 4, name: 'הילה לוין', phone: '054-3178959',
+    workshop: 'URU תל אביב', seats: 1, source: 'חבר/ה',
+    payment: 'ממתין', whatsapp: 'ממתין',
+    status: 'חדש', note: 'הרשמה אמיתית ל-URU 3.7; הופיעה בספאם בפורמספרי 21.6 15:33',
+    date: '2026-06-21T15:33:00', lane: 'needs'
+  },
+  {
+    id: 5, name: 'יאיר לביא', phone: '050-9862802',
+    workshop: 'URU תל אביב', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'נשלחה פנייה',
+    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    date: '2026-06-15T11:00:00', lane: 'waiting'
+  },
+  {
+    id: 6, name: 'הדר לוטטי', phone: '050-2373983',
+    workshop: 'URU תל אביב', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'נשלחה פנייה',
+    status: 'חדש', note: 'נרשמה לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    date: '2026-06-16T08:20:00', lane: 'waiting'
+  },
+  {
+    id: 7, name: 'סאן לקסמן', phone: '050-9024030',
+    workshop: 'URU תל אביב', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'נשלחה פנייה',
+    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    date: '2026-06-17T12:45:00', lane: 'waiting'
+  },
+  {
+    id: 8, name: 'דניאל יצחק', phone: '053-4277207',
+    workshop: 'URU תל אביב', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'נשלחה פנייה',
+    status: 'חדש', note: 'נרשם לפני שהיה תאריך; נשלחה וואטסאפ 21.6',
+    date: '2026-06-18T16:10:00', lane: 'waiting'
+  },
+  {
+    id: 9, name: 'יפתח גל', phone: '050-2057819',
+    workshop: 'קנופי ירושלים', seats: 2, source: 'חבר/ה',
+    payment: 'שולם', whatsapp: 'נשלחה פנייה',
+    status: 'סגור', note: 'שולם — מקום שמור',
+    date: '2026-06-10T10:30:00', lane: 'closed'
+  },
+  {
+    id: 10, name: 'חסידה', phone: '052-8568210',
+    workshop: 'קנופי ירושלים', seats: 1, source: 'אינסטגרם',
+    payment: 'שולם', whatsapp: 'נשלחה פנייה',
+    status: 'סגור', note: 'שולם — מקום שמור',
+    date: '2026-06-12T13:00:00', lane: 'closed'
+  },
+  {
+    id: 11, name: 'דאלי גורדון', phone: '054-4643263',
+    workshop: 'קנופי ירושלים', seats: 1, source: 'אחר',
+    payment: 'שולם', whatsapp: 'נשלחה פנייה',
+    status: 'סגור', note: 'שולם — מקום שמור',
+    date: '2026-06-14T09:00:00', lane: 'closed'
+  },
+  {
+    id: 12, name: 'Liraz Hashai', phone: '+972-***4751',
+    workshop: 'עדכונים אספרסו', seats: 1, source: 'אתר',
+    payment: 'ממתין', whatsapp: 'ממתין',
+    status: 'לא טופל',
+    note: 'עדכוני אספרסו — לא רלוונטי לסדנת פילטר נוכחית אלא אם דרור יחליט אחרת',
+    date: '2026-06-05T20:00:00', lane: 'needs'
+  }
+];
+
+// ============================================================
+// HELPERS
+// ============================================================
+function formatDate(iso) {
+  const d = new Date(iso);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth()+1).padStart(2, '0');
+  const hours = String(d.getHours()).padStart(2, '0');
+  const mins = String(d.getMinutes()).padStart(2, '0');
+  return `${day}.${month} ${hours}:${mins}`;
+}
+
+function shortDate(iso) {
+  const d = new Date(iso);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth()+1).padStart(2, '0');
+  return `${day}.${month}`;
+}
+
+function paymentClass(val) {
+  if (val === 'שולם') return 'paid';
+  if (val === 'נשלחה בקשת BIT') return 'sent';
+  return '';
+}
+
+function whatsappClass(val) {
+  return val === 'נשלחה פנייה' ? 'sent' : '';
+}
+
+function statusBadgeClass(val) {
+  if (val === 'חדש' || val === 'לא טופל') return 'new';
+  if (val === 'צריך מעקב תשלום') return 'needs';
+  return 'waiting';
+}
+
+function laneDot(val) {
+  if (val === 'needs') return 'needs';
+  if (val === 'waiting') return 'waiting';
+  return 'closed';
+}
+
+// ============================================================
+// RENDER LANES
+// ============================================================
+function renderLanes(data) {
+  for (const lane of ['needs', 'waiting', 'closed']) {
+    const body = document.getElementById('laneBody' + (lane === 'needs' ? '1' : lane === 'waiting' ? '2' : '3'));
+    const items = data.filter(r => r.lane === lane);
+    body.innerHTML = '';
+    if (items.length === 0) {
+      body.innerHTML = `<div class="empty-lane">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span>אין נרשמים בנתיב זה</span>
+      </div>`;
+      continue;
+    }
+    items.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'reg-card';
+      card.dataset.id = r.id;
+      card.innerHTML = `
+        <div class="reg-card-top">
+          <span class="reg-name">${r.name}</span>
+          <span class="reg-seats">${r.seats ? r.seats + ' מק׳' : '—'}</span>
+        </div>
+        <div class="reg-meta">
+          <span class="reg-date">${shortDate(r.date)}</span>
+          <span>·</span>
+          <span>${r.workshop}</span>
+          ${r.lane === 'needs' ? `<span>·</span><span class="reg-source" style="font-weight:500;color:var(--badge-needs)">${r.payment}</span>` : ''}
+        </div>
+        <div class="reg-actions">
+          ${r.lane !== 'closed' ? `
+          <button class="action-pill whatsapp ${whatsappClass(r.whatsapp)}" data-action="whatsapp" data-id="${r.id}">
+            ${r.whatsapp === 'נשלחה פנייה' ? '✓ וואטסאפ' : 'וואטסאפ'}
+          </button>
+          <button class="action-pill bit ${paymentClass(r.payment)}" data-action="payment" data-id="${r.id}">
+            ${r.payment === 'שולם' ? '✓ שולם' : r.payment === 'נשלחה בקשת BIT' ? '✓ BIT' : 'BIT'}
+          </button>
+          ` : `<span class="action-pill paid">✓ שולם</span>`}
+          ${r.lane === 'needs' ? `<button class="action-pill status" data-action="status" data-id="${r.id}">${r.status}</button>` : ''}
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action]')) return;
+        openSheet(r.id);
+      });
+      body.appendChild(card);
+    });
+    document.getElementById('laneCount' + (lane === 'needs' ? '1' : lane === 'waiting' ? '2' : '3')).textContent = items.length;
+  }
+  updateTotal(data);
+}
+
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function renderTable(data) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  data.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="table-status-dot" style="background:${r.lane === 'needs' ? 'var(--badge-needs)' : r.lane === 'waiting' ? 'var(--badge-waiting)' : 'var(--badge-closed)'}"></span><span class="td-name">${r.name}</span></td>
+      <td class="td-phone">${r.phone}</td>
+      <td>${r.workshop}</td>
+      <td class="td-seats">${r.seats || '—'}</td>
+      <td><span class="badge ${statusBadgeClass(r.payment === 'שולם' ? 'סגור' : r.payment === 'נשלחה בקשת BIT' ? 'needs' : 'waiting')}">${r.payment}</span></td>
+      <td><span class="badge ${r.whatsapp === 'נשלחה פנייה' ? 'closed' : 'waiting'}">${r.whatsapp}</span></td>
+      <td><span class="badge ${statusBadgeClass(r.status)}">${r.status}</span></td>
+      <td style="direction:ltr;text-align:right">${formatDate(r.date)}</td>
+    `;
+    tr.addEventListener('click', () => openSheet(r.id));
+    tbody.appendChild(tr);
+  });
+}
+
+function updateTotal(data) {
+  document.getElementById('totalCount').textContent = data.length;
+  document.querySelector('[data-filter=all] .count').textContent = data.length;
+}
+
+// ============================================================
+// QUICK ACTIONS (inline pill toggles)
+// ============================================================
+function cycleWhatsApp(id) {
+  const r = registrations.find(x => x.id === id);
+  if (!r) return;
+  r.whatsapp = r.whatsapp === 'נשלחה פנייה' ? 'ממתין' : 'נשלחה פנייה';
+  reRender();
+}
+
+function cyclePayment(id) {
+  const r = registrations.find(x => x.id === id);
+  if (!r) return;
+  const cycle = { 'ממתין': 'נשלחה בקשת BIT', 'נשלחה בקשת BIT': 'שולם', 'שולם': 'ממתין' };
+  r.payment = cycle[r.payment] || 'ממתין';
+  // Move lane based on payment
+  if (r.payment === 'שולם') r.lane = 'closed';
+  else if (r.payment === 'נשלחה בקשת BIT') r.lane = 'waiting';
+  else r.lane = 'needs';
+  reRender();
+}
+
+function cycleStatus(id) {
+  const r = registrations.find(x => x.id === id);
+  if (!r) return;
+  const cycle = { 'חדש': 'צריך מעקב תשלום', 'צריך מעקב תשלום': 'נרשם אצל שני', 'נרשם אצל שני': 'לא טופל', 'לא טופל': 'חדש' };
+  r.status = cycle[r.status] || 'חדש';
+  reRender();
+}
+
+// Delegate action clicks
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  e.stopPropagation();
+  const action = btn.dataset.action;
+  const id = parseInt(btn.dataset.id);
+  if (action === 'whatsapp') cycleWhatsApp(id);
+  else if (action === 'payment') cyclePayment(id);
+  else if (action === 'status') cycleStatus(id);
+});
+
+// ============================================================
+// BOTTOM SHEET
+// ============================================================
+function openSheet(id) {
+  const r = registrations.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('sheetTitle').textContent = r.name;
+  document.getElementById('editName').value = r.name;
+  document.getElementById('editPhone').value = r.phone;
+  document.getElementById('editWorkshop').value = r.workshop;
+  document.getElementById('editSeats').value = r.seats || 0;
+  document.getElementById('editPayment').value = r.payment;
+  document.getElementById('editWhatsapp').value = r.whatsapp;
+  document.getElementById('editStatus').value = r.status;
+  document.getElementById('editSource').value = r.source;
+  document.getElementById('editDate').textContent = formatDate(r.date);
+  document.getElementById('editNote').value = r.note || '';
+  document.getElementById('sheet').dataset.editId = id;
+  document.getElementById('sheetOverlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('sheetOverlay').addEventListener('click', closeSheet);
+document.getElementById('sheetClose').addEventListener('click', closeSheet);
+
+document.getElementById('sheetSave').addEventListener('click', () => {
+  const id = parseInt(document.getElementById('sheet').dataset.editId);
+  const r = registrations.find(x => x.id === id);
+  if (!r) return;
+  r.name = document.getElementById('editName').value;
+  r.phone = document.getElementById('editPhone').value;
+  r.workshop = document.getElementById('editWorkshop').value;
+  r.seats = parseInt(document.getElementById('editSeats').value) || 0;
+  r.payment = document.getElementById('editPayment').value;
+  r.whatsapp = document.getElementById('editWhatsapp').value;
+  r.status = document.getElementById('editStatus').value;
+  r.source = document.getElementById('editSource').value;
+  r.note = document.getElementById('editNote').value;
+  // Recalculate lane
+  if (r.payment === 'שולם') r.lane = 'closed';
+  else if (r.payment === 'נשלחה בקשת BIT') r.lane = 'waiting';
+  else if (r.whatsapp === 'נשלחה פנייה') r.lane = 'waiting';
+  else r.lane = 'needs';
+  reRender();
+  closeSheet();
+});
+
+document.getElementById('sheetDelete').addEventListener('click', () => {
+  const id = parseInt(document.getElementById('sheet').dataset.editId);
+  const idx = registrations.findIndex(x => x.id === id);
+  if (idx > -1 && confirm('למחוק את הנרשם?')) {
+    registrations.splice(idx, 1);
+    reRender();
+    closeSheet();
+  }
+});
+
+// ============================================================
+// FILTERING
+// ============================================================
+let activeFilter = 'all';
+
+document.querySelectorAll('.filter-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    activeFilter = pill.dataset.filter;
+    reRender();
+  });
+});
+
+function applyFilter(data) {
+  if (activeFilter === 'all') return data;
+  if (activeFilter === 'uru') return data.filter(r => r.workshop.includes('URU'));
+  if (activeFilter === 'canopy') return data.filter(r => r.workshop.includes('קנופי'));
+  if (activeFilter === 'espresso') return data.filter(r => r.workshop.includes('אספרסו'));
+  if (activeFilter === 'needs_followup') return data.filter(r => r.lane === 'needs');
+  if (activeFilter === 'unpaid') return data.filter(r => r.payment !== 'שולם');
+  return data;
+}
+
+// ============================================================
+// SEARCH
+// ============================================================
+document.getElementById('searchToggle').addEventListener('click', () => {
+  const bar = document.getElementById('searchBar');
+  bar.classList.toggle('open');
+  if (bar.classList.contains('open')) {
+    document.getElementById('searchInput').focus();
+  } else {
+    document.getElementById('searchInput').value = '';
+    reRender();
+  }
+});
+
+document.getElementById('closeSearch').addEventListener('click', () => {
+  document.getElementById('searchBar').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+  reRender();
+});
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  reRender();
+});
+
+function applySearch(data) {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (!q) return data;
+  return data.filter(r =>
+    r.name.includes(q) ||
+    r.phone.replace(/[\s-]/g,'').includes(q.replace(/[\s-]/g,'')) ||
+    r.workshop.includes(q) ||
+    r.source.includes(q)
+  );
+}
+
+// ============================================================
+// VIEW TOGGLE (lanes / table)
+// ============================================================
+document.getElementById('viewToggle').addEventListener('click', () => {
+  const cockpit = document.getElementById('cockpit');
+  const table = document.getElementById('tableView');
+  const isTable = table.classList.toggle('visible');
+  cockpit.style.display = isTable ? 'none' : 'flex';
+  if (isTable) reRender();
+});
+
+// Tab bar
+document.getElementById('tabLanes').addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tabLanes').classList.add('active');
+  document.getElementById('cockpit').style.display = 'flex';
+  document.getElementById('tableView').classList.remove('visible');
+});
+
+document.getElementById('tabTable').addEventListener('click', () => {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tabTable').classList.add('active');
+  document.getElementById('cockpit').style.display = 'none';
+  document.getElementById('tableView').classList.add('visible');
+  reRender();
+});
+
+// ============================================================
+// RE-RENDER
+// ============================================================
+function reRender() {
+  let data = applyFilter(registrations);
+  data = applySearch(data);
+  renderLanes(data);
+  renderTable(data);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+reRender();
+</script>
+</body>
+</html>

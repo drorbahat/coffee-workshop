@@ -1,4 +1,20 @@
+import { normalizeRegistration, isBillableRow } from './registration-normalize.js';
+
+import { renderRegistrationsAdminPage } from './admin-registrations-ui.js';
+
 const STATUS_KEY = 'status';
+
+// Full column projection used for admin registration responses
+const ADMIN_REGISTRATION_SELECT = `SELECT
+  id, created_at, updated_at,
+  name, phone, email,
+  edition, request_type, workshop, workshop_date, source, group_registration,
+  seats, amount_ils,
+  whatsapp_status, payment_status, registration_status,
+  is_spam, spam_reason,
+  record_type, parent_registration_id, crm_stage,
+  notes, imported_from, original_submission_id
+FROM registrations`;
 const WORKSHOPS = {
   filter_2026_06_15: {
     title: 'סדנת חליטות ביתיות — קנופי ירושלים',
@@ -15,6 +31,94 @@ const WORKSHOPS = {
     open: true,
   },
 };
+
+// ───── Helper functions ────────────────────────────────────────────────────
+
+/**
+ * Validate and coerce a single field update value.
+ * Returns { value } on success or { error } on failure.
+ */
+/** Nullable optional fields — accept null/''/undefined and persist DB NULL */
+const NULLABLE_FIELDS = new Set([
+  'crm_stage', 'record_type',
+  'parent_registration_id', 'amount_ils',
+  'notes', 'workshop', 'workshop_date', 'source', 'group_registration', 'email',
+]);
+
+function validateAndCoerceUpdate(field, rawValue) {
+  if (!ALLOWED_UPDATE_FIELDS.has(field)) {
+    return { error: `field '${escapeHtml(field)}' is not allowed for update` };
+  }
+
+  // Null/undefined/empty early-exit for nullable optional fields
+  if (rawValue === null || rawValue === undefined || rawValue === '') {
+    if (NULLABLE_FIELDS.has(field)) {
+      return { value: null };
+    }
+    // For non-nullable fields, treat empty as empty string (not String(null) = 'null')
+    rawValue = '';
+  }
+
+  // Validate status values where applicable
+  const allowedValues = ALLOWED_STATUS_VALUES[field];
+  if (allowedValues) {
+    const strValue = String(rawValue).trim();
+    const match = allowedValues.some(v => String(v) === strValue);
+    if (!match) {
+      return { error: `invalid value '${escapeHtml(strValue)}' for field '${escapeHtml(field)}'. Allowed: ${allowedValues.join(', ')}` };
+    }
+  }
+
+  // Validate text field lengths
+  const TEXT_MAXLEN = {
+    name: 200, phone: 40, email: 320, edition: 200,
+    request_type: 200, workshop: 200, workshop_date: 200,
+    source: 200, group_registration: 200, notes: 2000,
+  };
+  const maxLen = TEXT_MAXLEN[field];
+  if (maxLen && typeof rawValue === 'string' && rawValue.length > maxLen) {
+    return { error: `value too long for '${field}' (max ${maxLen})` };
+  }
+
+  let value = rawValue;
+
+  // Type conversions
+  if (field === 'is_spam') {
+    value = (value === true || value === '1' || value === 'true' || value === 1) ? 1 : 0;
+  } else if (field === 'seats') {
+    const n = parseInt(value, 10);
+    value = (!isNaN(n) && n >= 0) ? n : null;
+  } else if (field === 'amount_ils') {
+    if (value === null || value === '' || value === undefined) {
+      value = null;
+    } else {
+      const n = parseInt(value, 10);
+      value = (!isNaN(n) && n >= 0) ? n : null;
+    }
+  } else if (field === 'parent_registration_id') {
+    if (value === null || value === '' || value === undefined) {
+      value = null;
+    } else {
+      const n = parseInt(value, 10);
+      value = (!isNaN(n) && n > 0) ? n : null;
+    }
+  } else {
+    // String fields: trim, cap length
+    value = String(value).trim();
+    if (value.length > 2000) value = value.slice(0, 2000);
+  }
+
+  return { value };
+}
+
+/**
+ * Fetch a full normalized registration row by id.
+ * Uses ADMIN_REGISTRATION_SELECT for consistent projection.
+ */
+async function fetchRegistrationById(db, id) {
+  const row = await db.prepare(`${ADMIN_REGISTRATION_SELECT} WHERE id = ?`).bind(id).first();
+  return row ? normalizeRegistration(row) : null;
+}
 
 export default {
   async fetch(request, env) {
@@ -91,6 +195,11 @@ export default {
       if (request.method === 'GET') return handleRegistrations(env);
     }
 
+    if (url.pathname === '/admin/registrations.json' && request.method === 'GET') {
+      if (!(await isAuthed(request, env))) return json({ ok: false, error: 'unauthorized' }, env, 401);
+      return handleRegistrationsJson(env);
+    }
+
     if (url.pathname === '/admin/export.csv') {
       if (!(await isAuthed(request, env))) return html(loginPage(), env);
       if (request.method === 'GET') return handleCsvExport(env);
@@ -99,6 +208,16 @@ export default {
     if (url.pathname === '/admin/registration/update' && request.method === 'POST') {
       if (!(await isAuthed(request, env))) return json({ ok: false, error: 'unauthorized' }, env, 401);
       return handleRegistrationUpdate(request, env);
+    }
+
+    if (url.pathname === '/admin/registration/update-many' && request.method === 'POST') {
+      if (!(await isAuthed(request, env))) return json({ ok: false, error: 'unauthorized' }, env, 401);
+      return handleRegistrationUpdateMany(request, env);
+    }
+
+    if (url.pathname === '/admin/registration/delete' && request.method === 'POST') {
+      if (!(await isAuthed(request, env))) return json({ ok: false, error: 'unauthorized' }, env, 401);
+      return handleRegistrationDelete(request, env);
     }
 
     return new Response('Not found', { status: 404 });
@@ -281,7 +400,46 @@ async function handleRegister(request, env) {
 
 // ───── Phase 2A handlers ─────────────────────────────────────────────────
 
+async function handleRegistrationsJson(env) {
+  const db = env.coffee_workshop_registrations;
+  if (!db) return json({ ok: false, error: 'database unavailable' }, env, 500);
+
+  const rows = await db.prepare(
+    `${ADMIN_REGISTRATION_SELECT} ORDER BY datetime(created_at) DESC, id DESC`
+  ).all();
+
+  const items = (rows.results || []).map(normalizeRegistration);
+
+  const counts = {
+    total: items.length,
+    needs_action: items.filter(r => r.lane === 'needs_action').length,
+    open_leads: items.filter(r => r.lane === 'open_leads').length,
+    needs_closing: items.filter(r => r.lane === 'needs_closing').length,
+    waiting_payment: items.filter(r => r.lane === 'waiting_payment').length,
+    closed: items.filter(r => r.lane === 'closed').length,
+    no_whatsapp: items.filter(r => r.whatsapp_status === 'pending').length,
+    unpaid: items.filter(r => isBillableRow(r) && r.payment_status !== 'paid').length,
+    paid_seats: items
+      .filter(r => isBillableRow(r) && r.payment_status === 'paid')
+      .reduce((s, r) => s + (Number(r.seats) || 0), 0),
+  };
+
+  const workshopKeys = ['all', ...new Set(items.map(r => r.workshop_key).filter(Boolean))];
+
+  const filters = {
+    workshop_keys: workshopKeys,
+    whatsapp_statuses: ['all', 'pending', 'outreach_sent', 'sent', 'awaiting_reply', 'replied_interested'],
+    payment_statuses: ['all', 'pending', 'bit_request_sent', 'paid'],
+    registration_statuses: ['all', 'new', 'registered', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'group_member', 'not_handled', 'lead', 'interested'],
+    record_types: ['all', 'lead', 'registration', 'attendee'],
+    crm_stages: ['all', 'open', 'awaiting_reply', 'interested', 'closing', 'closed', 'lost'],
+  };
+
+  return json({ ok: true, registrations: items, counts, filters }, env);
+}
+
 const UPDATE_COLUMN_MAP = Object.freeze({
+  // Existing status fields
   whatsapp_status: 'whatsapp_status',
   payment_status: 'payment_status',
   registration_status: 'registration_status',
@@ -289,8 +447,30 @@ const UPDATE_COLUMN_MAP = Object.freeze({
   notes: 'notes',
   seats: 'seats',
   amount_ils: 'amount_ils',
+  // CRM-lite fields
+  record_type: 'record_type',
+  parent_registration_id: 'parent_registration_id',
+  crm_stage: 'crm_stage',
+  // Editable text fields
+  name: 'name',
+  phone: 'phone',
+  email: 'email',
+  edition: 'edition',
+  request_type: 'request_type',
+  workshop: 'workshop',
+  workshop_date: 'workshop_date',
+  source: 'source',
+  group_registration: 'group_registration',
 });
 const ALLOWED_UPDATE_FIELDS = new Set(Object.keys(UPDATE_COLUMN_MAP));
+const ALLOWED_STATUS_VALUES = Object.freeze({
+  whatsapp_status: ['pending', 'outreach_sent', 'sent', 'awaiting_reply', 'replied_interested'],
+  payment_status: ['pending', 'bit_request_sent', 'paid'],
+  registration_status: ['new', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'not_handled', 'lead', 'group_member', 'interested', 'registered'],
+  is_spam: [0, 1, '0', '1', true, false],
+  record_type: ['lead', 'registration', 'attendee'],
+  crm_stage: ['open', 'awaiting_reply', 'interested', 'closing', 'closed', 'lost'],
+});
 
 const COLUMN_LABELS = {
   created_at: 'תאריך',
@@ -315,143 +495,7 @@ const DISPLAY_COLUMNS = [
 ];
 
 async function handleRegistrations(env) {
-  const db = env.coffee_workshop_registrations;
-  if (!db) return html('<p>Database unavailable</p>', env, 500);
-
-  const rows = await db.prepare(
-    'SELECT id, created_at, name, phone, edition, request_type, source, ' +
-    'seats, amount_ils, whatsapp_status, payment_status, registration_status, ' +
-    'is_spam, notes FROM registrations ORDER BY created_at DESC'
-  ).all();
-
-  const items = rows.results || [];
-
-  let tableRows = items.map((r) => {
-    const rowHtml = DISPLAY_COLUMNS.map((col) => {
-      let val = r[col];
-      // Format is_spam as yes/no badge
-      if (col === 'is_spam') {
-        const is = Number(val);
-        return is ? '<span class="badge-spam">כן</span>' : '<span class="badge-clean">לא</span>';
-      }
-      // Format amount_ils
-      if (col === 'amount_ils' && val != null) {
-        return escapeHtml(String(val));
-      }
-      if (val == null) return '<span class="null">—</span>';
-      return escapeHtml(String(val));
-    }).join('');
-
-    // Inline action buttons for quick updates
-    const actionsHtml = `
-      <div class="inline-actions">
-        <form class="inline-form" data-id="${escapeHtml(String(r.id))}" data-field="whatsapp_status">
-          <button type="button" class="btn-sm" data-value="sent">וואטסאפ נשלח</button>
-        </form>
-        <form class="inline-form" data-id="${escapeHtml(String(r.id))}" data-field="payment_status">
-          <button type="button" class="btn-sm" data-value="bit_request_sent">Bit נשלח</button>
-          <button type="button" class="btn-sm" data-value="paid">שולם</button>
-        </form>
-        <form class="inline-form" data-id="${escapeHtml(String(r.id))}" data-field="is_spam">
-          <button type="button" class="btn-sm ${Number(r.is_spam) ? 'btn-danger' : ''}" data-value="${Number(r.is_spam) ? '0' : '1'}">${Number(r.is_spam) ? 'ביטול ספאם' : 'סמן ספאם'}</button>
-        </form>
-        <form class="inline-form" data-id="${escapeHtml(String(r.id))}" data-field="registration_status">
-          <button type="button" class="btn-sm" data-value="confirmed">אישור</button>
-          <button type="button" class="btn-sm" data-value="cancelled">ביטול</button>
-        </form>
-      </div>`;
-
-    return `<tr>${rowHtml}<td>${actionsHtml}</td></tr>`;
-  }).join('\n');
-
-  const htmlContent = `<!doctype html>
-<html lang="he" dir="rtl">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>הרשמות — ניהול סדנאות</title>
-<style>${baseCss()}
-body{padding:20px;display:block}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-.header h1{margin:0;font-size:1.4rem}
-.header .links{display:flex;gap:10px;align-items:center}
-.header .links a{color:#1a0e08;text-decoration:none;font-weight:700;font-size:.9rem}
-.header .links a:hover{text-decoration:underline}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:.8rem;background:white;border:1px solid #eadfce;border-radius:12px;overflow:hidden}
-th,td{padding:8px 10px;text-align:right;border-bottom:1px solid #eadfce;white-space:nowrap}
-th{background:#fbfaf8;font-weight:700;color:#3d2417;position:sticky;top:0}
-tr:hover{background:#f8f6f3}
-.null{color:#bbb}
-.badge-spam{background:#ffe8e5;color:#8a2a22;border-radius:999px;padding:2px 8px;font-size:.75rem;font-weight:700}
-.badge-clean{color:#aaa;font-size:.75rem}
-.inline-actions{display:flex;gap:4px;flex-wrap:wrap}
-.inline-form{display:inline}
-.btn-sm{font-family:inherit;font-size:.7rem;padding:3px 7px;border-radius:6px;border:1px solid #eadfce;background:#fbfaf8;color:#1a0e08;cursor:pointer;white-space:nowrap}
-.btn-sm:hover{background:#eadfce}
-.btn-danger{background:#6f2d22;color:white;border-color:#6f2d22}
-.btn-danger:hover{background:#8a3a2c}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a0e08;color:white;padding:10px 20px;border-radius:12px;font-size:.85rem;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none}
-#toast.show{opacity:1}
-.count{font-size:.85rem;color:#7a6657}
-</style>
-</head>
-<body>
-  <div class="header">
-    <h1>הרשמות לסדנאות</h1>
-    <div class="links">
-      <span class="count">${items.length} ${items.length === 1 ? 'הרשמה' : 'הרשמות'}</span>
-      <a href="/admin">חזרה לניהול מושבים</a>
-      <a href="/admin/export.csv">📥 ייצוא CSV</a>
-      <form method="post" action="/admin/logout" style="display:inline"><button class="ghost" type="submit">יציאה</button></form>
-    </div>
-  </div>
-  <div class="table-wrap">
-  <table>
-    <thead><tr>
-      ${DISPLAY_COLUMNS.map((c) => `<th>${COLUMN_LABELS[c] || c}</th>`).join('')}
-      <th>פעולות</th>
-    </tr></thead>
-    <tbody>${tableRows || '<tr><td colspan="14" style="text-align:center;color:#999">אין הרשמות</td></tr>'}</tbody>
-  </table>
-  </div>
-  <div id="toast"></div>
-<script>
-async function doUpdate(id, field, value) {
-  const toast = document.getElementById('toast');
-  toast.textContent = 'מעדכן...';
-  toast.className = 'show';
-  try {
-    const res = await fetch('/admin/registration/update', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({id, field, value})
-    });
-    const data = await res.json();
-    if (data.ok) {
-      toast.textContent = 'עודכן ✓';
-      setTimeout(() => location.reload(), 800);
-    } else {
-      toast.textContent = 'שגיאה: ' + (data.error || 'unknown');
-    }
-  } catch(e) {
-    toast.textContent = 'שגיאת רשת';
-  }
-  setTimeout(() => toast.className = '', 3000);
-}
-document.querySelectorAll('.inline-form button[data-value]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const form = btn.closest('.inline-form');
-    const id = form.dataset.id;
-    const field = form.dataset.field;
-    const value = btn.dataset.value;
-    doUpdate(id, field, value);
-  });
-});
-</script>
-</body>
-</html>`;
-
-  return html(htmlContent, env);
+  return html(renderRegistrationsAdminPage(), env);
 }
 
 async function handleCsvExport(env) {
@@ -516,29 +560,9 @@ async function handleRegistrationUpdate(request, env) {
   }
 
   const field = String(body.field || '').trim();
-  if (!ALLOWED_UPDATE_FIELDS.has(field)) {
-    return json({ ok: false, error: `field '${escapeHtml(field)}' is not allowed for update` }, env, 400);
-  }
-
-  let value = body.value;
-
-  // Type conversions
-  if (field === 'is_spam') {
-    value = (value === true || value === '1' || value === 'true' || value === 1) ? 1 : 0;
-  } else if (field === 'seats') {
-    const n = parseInt(value, 10);
-    value = (!isNaN(n) && n >= 0) ? n : null;
-  } else if (field === 'amount_ils') {
-    if (value === null || value === '' || value === undefined) {
-      value = null;
-    } else {
-      const n = parseInt(value, 10);
-      value = (!isNaN(n) && n >= 0) ? n : null;
-    }
-  } else {
-    // String fields: trim, cap length
-    value = String(value).trim();
-    if (value.length > 2000) value = value.slice(0, 2000);
+  const validated = validateAndCoerceUpdate(field, body.value);
+  if (validated.error) {
+    return json({ ok: false, error: validated.error }, env, 400);
   }
 
   const columnName = UPDATE_COLUMN_MAP[field];
@@ -556,19 +580,141 @@ async function handleRegistrationUpdate(request, env) {
 
   // Update the registration
   const updateSql = `UPDATE registrations SET ${columnName} = ?, updated_at = datetime('now') WHERE id = ?`;
-  await db.prepare(updateSql).bind(value, id).run();
+  await db.prepare(updateSql).bind(validated.value, id).run();
 
   // Insert event log
   try {
     await db.prepare(
       `INSERT INTO registration_events (registration_id, event_type, old_value, new_value)
        VALUES (?, ?, ?, ?)`
-    ).bind(id, `updated:${field}`, oldValue, String(value ?? '')).run();
+    ).bind(id, `updated:${field}`, oldValue, String(validated.value ?? '')).run();
   } catch (evErr) {
     console.error('Failed to write registration_events:', evErr);
   }
 
-  return json({ ok: true, id, field, value }, env);
+  // Fetch the updated full normalized row
+  const registration = await fetchRegistrationById(db, id);
+
+  return json({ ok: true, id, field, value: validated.value, registration }, env);
+}
+
+async function handleRegistrationUpdateMany(request, env) {
+  const db = env.coffee_workshop_registrations;
+  if (!db) return json({ ok: false, error: 'database unavailable' }, env, 500);
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') {
+    return json({ ok: false, error: 'invalid JSON body' }, env, 400);
+  }
+
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return json({ ok: false, error: 'id must be a positive integer' }, env, 400);
+  }
+
+  const changes = body.changes;
+  if (!changes || typeof changes !== 'object' || Object.keys(changes).length === 0) {
+    return json({ ok: false, error: 'changes must be a non-empty object' }, env, 400);
+  }
+
+  // Validate ALL fields before writing any
+  const validated = {};
+  for (const [field, rawValue] of Object.entries(changes)) {
+    const result = validateAndCoerceUpdate(field, rawValue);
+    if (result.error) {
+      return json({ ok: false, error: `field '${field}': ${result.error}` }, env, 400);
+    }
+    validated[field] = result;
+  }
+
+  // Fetch current values for event log
+  const current = await db.prepare('SELECT * FROM registrations WHERE id = ?').bind(id).first();
+  if (!current) {
+    return json({ ok: false, error: 'registration not found' }, env, 404);
+  }
+
+  // Build and run a single UPDATE for all changed fields
+  const setClauses = [];
+  const bindValues = [];
+  for (const [field, result] of Object.entries(validated)) {
+    const columnName = UPDATE_COLUMN_MAP[field];
+    setClauses.push(`${columnName} = ?`);
+    bindValues.push(result.value);
+  }
+  setClauses.push("updated_at = datetime('now')");
+  bindValues.push(id);
+
+  const updateSql = `UPDATE registrations SET ${setClauses.join(', ')} WHERE id = ?`;
+  await db.prepare(updateSql).bind(...bindValues).run();
+
+  // Write registration_events row per changed field
+  for (const [field, result] of Object.entries(validated)) {
+    const columnName = UPDATE_COLUMN_MAP[field];
+    const oldValue = String(current[columnName] ?? '');
+    try {
+      await db.prepare(
+        `INSERT INTO registration_events (registration_id, event_type, old_value, new_value)
+         VALUES (?, ?, ?, ?)`
+      ).bind(id, `updated:${field}`, oldValue, String(result.value ?? '')).run();
+    } catch (evErr) {
+      console.error('Failed to write registration_events:', evErr);
+    }
+  }
+
+  // Fetch the updated full normalized row
+  const registration = await fetchRegistrationById(db, id);
+
+  return json({ ok: true, id, registration }, env);
+}
+
+async function handleRegistrationDelete(request, env) {
+  const db = env.coffee_workshop_registrations;
+  if (!db) return json({ ok: false, error: 'database unavailable' }, env, 500);
+
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object') {
+    return json({ ok: false, error: 'invalid JSON body' }, env, 400);
+  }
+
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return json({ ok: false, error: 'id must be a positive integer' }, env, 400);
+  }
+
+  // Check if registration exists
+  const existing = await db.prepare('SELECT id, name, notes, registration_status FROM registrations WHERE id = ?').bind(id).first();
+  if (!existing) {
+    return json({ ok: false, error: 'registration not found' }, env, 404);
+  }
+
+  // Soft-delete: mark as cancelled, append deletion note, update updated_at
+  const deletionNote = body.note ? String(body.note).trim().slice(0, 500) : 'נמחק ידנית';
+  const existingNotes = existing.notes || '';
+  let combinedNotes = existingNotes
+    ? `${existingNotes} | [ביטול: ${deletionNote}]`
+    : `[ביטול: ${deletionNote}]`;
+  if (combinedNotes.length > 2000) {
+    // Trim if too long, preserving the deletion marker
+    combinedNotes = combinedNotes.slice(0, 1990) + '…';
+  }
+
+  await db.prepare(
+    `UPDATE registrations SET registration_status = 'cancelled', notes = ?, updated_at = datetime('now') WHERE id = ?`
+  ).bind(combinedNotes, id).run();
+
+  // Log event
+  try {
+    await db.prepare(
+      `INSERT INTO registration_events (registration_id, event_type, old_value, new_value, note) VALUES (?, ?, ?, ?, ?)`
+    ).bind(id, 'deleted', existing.registration_status ?? '', 'cancelled', deletionNote).run();
+  } catch (evErr) {
+    console.error('Failed to write deletion event:', evErr);
+  }
+
+  // Fetch full normalized registration
+  const registration = await fetchRegistrationById(db, id);
+
+  return json({ ok: true, id, registration }, env);
 }
 
 async function isAuthed(request, env) {
@@ -684,8 +830,8 @@ body{display:flex;flex-direction:column;align-items:center;gap:18px;justify-cont
 <body>
   <div class="logout-bar"><form method="post" action="/admin/logout"><button class="ghost" type="submit">יציאה</button></form></div>
   <div class="admin-links">
-    <a href="/admin/registrations">📋 צפייה בהרשמות</a>
-    <a href="/admin/export.csv">📥 ייצוא CSV</a>
+    <a href="/admin/registrations">צפייה בהרשמות</a>
+    <a href="/admin/export.csv">ייצוא CSV</a>
   </div>
   ${cards}
   <p class="note" id="note">כל שינוי מתעדכן מיד באתר הציבורי.</p>

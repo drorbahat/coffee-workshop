@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>הצעה A — לוח פריטים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbfaf7; --surface:#fff; --surface-2:#f5f0e9; --ink:#1d1711; --muted:#756b60;
+  --line:#e7ded2; --accent:#8a5232; --accent-2:#c38b58; --green:#2f6f4f; --green-bg:#eaf3ed;
+  --amber:#9b5e15; --amber-bg:#f8ead7; --red:#8f3328; --red-bg:#f8e3df; --blue:#425f75; --blue-bg:#e8eff3;
+  --shadow:0 18px 48px rgba(60,38,22,.08); --radius:18px; --r-sm:12px; --sticky:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:'Assistant',system-ui,sans-serif;-webkit-font-smoothing:antialiased} body{font-size:16px;line-height:1.45}.shell{max-width:1240px;margin:0 auto;padding:22px 18px 44px}.top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800}.top h1{font-size:clamp(28px,4vw,46px);line-height:.95;margin:6px 0 8px;letter-spacing:-.035em}.sub{color:var(--muted);max-width:56ch}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:1px solid var(--line);background:#fff;color:var(--ink);height:42px;padding:0 15px;border-radius:999px;font-weight:800;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;white-space:nowrap}.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}.btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(60,38,22,.08)}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:18px 0}.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;box-shadow:0 1px 0 rgba(60,38,22,.02)}.stat b{display:block;font-size:25px;line-height:1}.stat span{display:block;margin-top:5px;font-size:13px;color:var(--muted);font-weight:700}.toolbar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:saturate(1.2) blur(12px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:24px;padding:12px;margin-bottom:14px}.filter-row{display:flex;gap:8px;overflow:auto;padding-bottom:4px;scrollbar-width:none}.chip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 13px;font-weight:800;font-family:inherit;white-space:nowrap;cursor:pointer}.chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}.search-row{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:10px}.search{width:100%;border:1px solid var(--line);background:#fff;border-radius:999px;height:44px;padding:0 16px;font:inherit}.view-note{display:flex;align-items:center;gap:8px;color:var(--muted);font-weight:700;font-size:13px}.board{background:var(--surface);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}.board-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line);background:#fff}.mobile-hint{display:none;padding:9px 14px;border-bottom:1px solid var(--line);background:#fffaf3;color:var(--muted);font-weight:800;font-size:13px}.board-head strong{font-size:17px}.density{display:flex;gap:6px}.density button{height:32px;border-radius:999px;border:1px solid var(--line);background:#fff;padding:0 10px;font-family:inherit;font-weight:800;cursor:pointer;color:var(--muted)}.density button.active{color:#fff;background:var(--ink);border-color:var(--ink)}.table-wrap{overflow:auto;max-height:68vh}.grid{width:100%;min-width:1040px;border-collapse:separate;border-spacing:0;font-size:14px}.grid th{position:sticky;top:0;z-index:3;background:#faf7f1;color:#604a3c;text-align:right;border-bottom:1px solid var(--line);padding:10px 12px;font-size:12px;letter-spacing:.03em;white-space:nowrap}.grid td{border-bottom:1px solid var(--line);padding:12px;vertical-align:middle;background:#fff}.grid tbody tr{cursor:pointer}.grid tbody tr:hover td{background:#fffaf3}.grid th.name-col,.grid td.name-col{position:sticky;right:0;z-index:4;background:var(--sticky);backdrop-filter:blur(10px);box-shadow:-1px 0 0 var(--line)}.person{display:flex;align-items:center;gap:10px;min-width:210px}.avatar{width:34px;height:34px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--accent)}.name{font-weight:900}.phone{direction:ltr;unicode-bidi:isolate;color:var(--muted);font-size:13px;text-align:right}.money,.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}.pill{display:inline-flex;align-items:center;gap:5px;min-height:27px;padding:4px 9px;border-radius:999px;border:1px solid transparent;font-size:12px;font-weight:900;white-space:nowrap}.pill.gray{background:#f2efeb;color:#6b6259}.pill.green{background:var(--green-bg);color:var(--green)}.pill.amber{background:var(--amber-bg);color:var(--amber)}.pill.red{background:var(--red-bg);color:var(--red)}.pill.blue{background:var(--blue-bg);color:var(--blue)}.pill.brown{background:#efe2d7;color:var(--accent)}.next{display:flex;align-items:center;gap:8px}.next .small-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 9px;font-weight:900;font-family:inherit;cursor:pointer;color:var(--ink)}.mini{color:var(--muted);font-size:12px}.empty{padding:42px;text-align:center;color:var(--muted);font-weight:700}.drawer{position:fixed;inset:0;display:none;z-index:50}.drawer.open{display:block}.scrim{position:absolute;inset:0;background:rgba(29,23,17,.28);backdrop-filter:blur(2px)}.panel{position:absolute;top:0;bottom:0;left:0;width:min(440px,92vw);background:#fff;border-right:1px solid var(--line);box-shadow:-20px 0 70px rgba(29,23,17,.2);padding:20px;overflow:auto}.panel-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:18px}.x{width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:20px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}.field{background:#fbfaf7;border:1px solid var(--line);border-radius:16px;padding:12px}.field small{display:block;color:var(--muted);font-weight:800;font-size:12px}.field b{display:block;margin-top:4px}.timeline{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}.timeline h3{margin:0 0 10px;font-size:16px}.step{display:grid;grid-template-columns:20px 1fr;gap:8px;color:var(--muted);font-size:14px;margin:8px 0}.step:before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent);margin-top:6px}.panel-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.toast{position:fixed;bottom:18px;right:50%;transform:translateX(50%);background:var(--ink);color:#fff;padding:11px 16px;border-radius:14px;font-weight:800;opacity:0;pointer-events:none;transition:.2s;z-index:99}.toast.show{opacity:1;transform:translateX(50%) translateY(-4px)}
+body.compact .grid td{padding:8px 10px} body.compact .avatar{width:28px;height:28px;border-radius:9px} body.compact .pill{min-height:23px;padding:3px 7px} body.compact .phone{display:none}
+@media (max-width:740px){.shell{padding:16px 10px 32px}.top{display:block}.actions{margin-top:14px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stat{padding:12px}.toolbar{border-radius:18px;margin-inline:0;padding:10px}.search-row{grid-template-columns:1fr}.view-note{display:none}.mobile-hint{display:block}.board{border-radius:18px}.board-head{align-items:flex-start;flex-direction:column}.table-wrap{max-height:64vh}.grid{min-width:920px;font-size:13px}.grid td{padding:10px 9px}.panel{left:0;right:0;top:auto;width:100%;height:78vh;border-radius:24px 24px 0 0;border-right:0;border-top:1px solid var(--line)}.field-grid{grid-template-columns:1fr}.top h1{font-size:34px}.sub{font-size:15px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Option A · Item Grid</div>
+      <h1>לוח הרשמות כמו Monday — אבל בעברית ונקי</h1>
+      <p class="sub">כל נרשם הוא item. לכל item יש מאפיינים נפרדים: סדנה, וואטסאפ, תשלום, סטטוס רישום, מקור ומקומות. מיועד לסינון והשוואה, לא רק “מה לעשות עכשיו”.</p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="exportBtn">ייצוא CSV</button>
+      <button class="btn primary" data-filter="needs">לטיפול עכשיו</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="תקציר">
+    <div class="stat"><b id="statTotal">—</b><span>הרשמות / לידים</span></div>
+    <div class="stat"><b id="statNoWa">—</b><span>לא נשלחה הודעה</span></div>
+    <div class="stat"><b id="statUnpaid">—</b><span>לא שילמו</span></div>
+    <div class="stat"><b id="statSeats">—</b><span>מקומות בתשלום</span></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="filter-row" id="filters">
+      <button class="chip active" data-filter="all">הכל</button>
+      <button class="chip" data-filter="uru">URU תל אביב</button>
+      <button class="chip" data-filter="kanopi">קנופי ירושלים</button>
+      <button class="chip" data-filter="updates">עדכונים בלבד</button>
+      <button class="chip" data-filter="no_whatsapp">לא נשלחה WhatsApp</button>
+      <button class="chip" data-filter="sent_whatsapp">נשלחה WhatsApp</button>
+      <button class="chip" data-filter="unpaid">לא שילמו</button>
+      <button class="chip" data-filter="bit_sent">Bit נשלח</button>
+      <button class="chip" data-filter="needs">דורש טיפול</button>
+    </div>
+    <div class="search-row">
+      <input class="search" id="search" placeholder="חיפוש לפי שם, טלפון, סדנה, מקור…" />
+      <div class="view-note">טיפ: הטור הראשון נשאר קבוע גם בגלילה הצידה</div>
+    </div>
+  </section>
+
+  <main class="board">
+    <div class="board-head">
+      <div><strong id="viewTitle">כל ההרשמות</strong><div class="mini" id="viewSub">מציג את כל הפריטים עם מאפיינים נפרדים</div></div>
+      <div class="density"><button class="active" id="comfortable">נוח</button><button id="compact">צפוף</button></div>
+    </div>
+    <div class="mobile-hint">בטלפון: זו טבלת items. גלול הצידה כדי לראות את כל המאפיינים, והשם נשאר קבוע.</div>
+    <div class="table-wrap">
+      <table class="grid">
+        <thead><tr>
+          <th class="name-col">נרשם</th><th>סדנה / מועד</th><th>WhatsApp</th><th>תשלום</th><th>רישום</th><th>מקומות</th><th>סכום</th><th>מקור</th><th>פעולה הבאה</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div class="drawer" id="drawer" aria-hidden="true">
+  <div class="scrim" data-close></div>
+  <aside class="panel">
+    <div class="panel-head">
+      <div><div class="eyebrow">פרטי item</div><h2 id="dName" style="margin:6px 0 4px;font-size:28px;line-height:1"></h2><div class="phone" id="dPhone"></div></div>
+      <button class="x" data-close>×</button>
+    </div>
+    <div id="dPills" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div class="field-grid" id="dFields"></div>
+    <div class="panel-actions">
+      <button class="btn primary" id="waBtn">פתח WhatsApp</button>
+      <button class="btn" id="markPaidBtn">סמן שולם</button>
+      <button class="btn" id="bitBtn">Bit נשלח</button>
+      <button class="btn" id="noteBtn">הוסף הערה</button>
+    </div>
+    <div class="timeline"><h3>היסטוריה קצרה</h3><div id="dTimeline"></div></div>
+  </aside>
+</div>
+<div class="toast" id="toast">עודכן</div>
+
+<script>
+const data = [
+{id:21,name:'יונתן נובוטני',phone:'0526508860',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00–12:30',source:'אינסטגרם',group:'כלול בהרשמת שניר',seats:0,amount:0,wa:'pending',pay:'pending',reg:'registered_under_shnir',notes:'בעלה של שניר; כלול תחת הרישום שלה.'},
+{id:20,name:'הילה לוין',phone:'0543178959',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00–12:30',source:'חבר/ה',seats:1,amount:200,wa:'pending',pay:'pending',reg:'new',notes:'הרשמה אמיתית שהייתה בספאם של Formspree.'},
+{id:19,name:'יאנה סיליוטין',phone:'054251966',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'אחר',seats:1,amount:200,wa:'pending',pay:'pending',reg:'new',notes:''},
+{id:18,name:'שניר פוקס',phone:'0502234126',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'אינסטגרם',group:'הרשמת קבוצה',seats:2,amount:400,wa:'pending',pay:'bit_request_sent',reg:'new',notes:'נרשמה עבורה ועבור יונתן.'},
+{id:17,name:'הלל כהן',phone:'0546171377',edition:'קנופי · ירושלים',workshop:'חליטות ביתיות',date:'שני 15.6 16:00–17:30',source:'חבר/ה',seats:1,amount:180,wa:'pending',pay:'pending',reg:'new',notes:''},
+{id:15,name:'יאיר לביא',phone:'0509862802',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'אינסטגרם',seats:1,amount:200,wa:'outreach_sent',pay:'pending',reg:'new',notes:'הרשמה מוקדמת.'},
+{id:14,name:'יפתח גל',phone:'0502057819',edition:'עדכונים — סדנת חליטות',workshop:'עדכונים',date:'מועד עתידי',source:'חבר/ה',seats:1,amount:null,wa:'outreach_sent',pay:'pending',reg:'lead',notes:''},
+{id:13,name:'Hadar Lotaty',phone:'0502373983',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'אינסטגרם',seats:1,amount:200,wa:'outreach_sent',pay:'pending',reg:'new',notes:''},
+{id:12,name:'יאנה סיליוטין',phone:'0542519667',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'—',seats:1,amount:200,wa:'pending',pay:'pending',reg:'needs_payment_followup',notes:'צריך פולואפ תשלום.'},
+{id:11,name:'סאן לקסמן',phone:'0509024030',edition:'URU · תל אביב',workshop:'חליטות ביתיות',date:'שישי 3.7 11:00',source:'אינסטגרם',seats:1,amount:200,wa:'outreach_sent',pay:'pending',reg:'new',notes:''},
+{id:9,name:'Liraz Hashai',phone:'+972****4751',edition:'עדכונים — סדנת אספרסו',workshop:'אספרסו',date:'מועד עתידי',source:'אינסטגרם',seats:1,amount:null,wa:'pending',pay:'pending',reg:'not_handled',notes:'טלפון מסוך; ליד אספרסו לא טופל כרגע.'},
+{id:7,name:'שרי בלנק',phone:'0545262538',edition:'קנופי · ירושלים',workshop:'חליטות ביתיות',date:'שני 15.6 16:00–17:30',source:'אינסטגרם',seats:1,amount:180,wa:'pending',pay:'pending',reg:'new',notes:''},
+{id:5,name:'נדב סטרכילביץ',phone:'0502054423',edition:'קנופי · ירושלים',workshop:'חליטות ביתיות',date:'שני 15.6 16:00–17:30',source:'חבר/ה',seats:1,amount:180,wa:'pending',pay:'pending',reg:'new',notes:''}
+];
+const labels = {
+  wa:{pending:['לא נשלחה', 'amber'], outreach_sent:['נשלחה', 'green']},
+  pay:{pending:['לא שולם', 'amber'], bit_request_sent:['Bit נשלח', 'blue'], paid:['שולם', 'green']},
+  reg:{new:['חדש', 'brown'], needs_payment_followup:['פולואפ תשלום', 'red'], registered_under_shnir:['כלול בקבוצה', 'gray'], not_handled:['לא טופל', 'red'], lead:['ליד לעדכונים', 'blue'], cancelled:['בוטל', 'gray']}
+};
+const filtersMeta = {all:['כל ההרשמות','מציג את כל הפריטים עם מאפיינים נפרדים'],uru:['URU תל אביב','כל מי שנרשם או התעניין במועד תל אביב'],kanopi:['קנופי ירושלים','כל הרשמות ירושלים'],updates:['עדכונים בלבד','לידים שלא נרשמו למועד פעיל'],no_whatsapp:['לא נשלחה WhatsApp','אנשים שעוד לא קיבלו הודעה'],sent_whatsapp:['נשלחה WhatsApp','אנשים שכבר התחלת איתם קשר'],unpaid:['לא שילמו','מי שאין לו סטטוס תשלום מאושר'],bit_sent:['Bit נשלח','מי שמחכה לתשלום אחרי בקשת Bit'],needs:['דורש טיפול','לא נשלחה הודעה / צריך פולואפ / לא טופל']};
+let active='all', query='', selected=null;
+function pill(text,cls){return `<span class="pill ${cls||'gray'}">${text}</span>`}
+function waLabel(v){return labels.wa[v]||[v,'gray']} function payLabel(v){return labels.pay[v]||[v,'gray']} function regLabel(v){return labels.reg[v]||[v,'gray']}
+function isActiveLead(r){return r.reg==='not_handled'||r.reg==='needs_payment_followup'||r.wa==='pending'}
+function nextAction(r){ if(r.reg==='registered_under_shnir') return ['בדוק קבוצה','gray']; if(r.wa==='pending') return ['פתח WhatsApp','amber']; if(r.pay==='pending') return ['שלח/בדוק Bit','blue']; if(r.pay==='bit_request_sent') return ['סמן שולם','green']; return ['אין פעולה','gray']; }
+function passes(r){
+ const s=(r.name+' '+r.phone+' '+r.edition+' '+r.source+' '+r.notes).toLowerCase(); if(query && !s.includes(query.toLowerCase())) return false;
+ if(active==='all') return true; if(active==='uru') return r.edition.includes('URU'); if(active==='kanopi') return r.edition.includes('קנופי'); if(active==='updates') return r.edition.includes('עדכונים'); if(active==='no_whatsapp') return r.wa==='pending'; if(active==='sent_whatsapp') return r.wa==='outreach_sent'; if(active==='unpaid') return r.pay!=='paid'; if(active==='bit_sent') return r.pay==='bit_request_sent'; if(active==='needs') return isActiveLead(r); return true;
+}
+function render(){
+ const rows=data.filter(passes); const body=document.getElementById('rows');
+ document.getElementById('statTotal').textContent=data.length; document.getElementById('statNoWa').textContent=data.filter(r=>r.wa==='pending').length; document.getElementById('statUnpaid').textContent=data.filter(r=>r.pay!=='paid' && r.amount).length; document.getElementById('statSeats').textContent=data.filter(r=>r.amount).reduce((a,r)=>a+r.seats,0);
+ const meta=filtersMeta[active]||filtersMeta.all; document.getElementById('viewTitle').textContent=meta[0]+' · '+rows.length; document.getElementById('viewSub').textContent=meta[1];
+ if(!rows.length){body.innerHTML=`<tr><td colspan="9" class="empty">אין תוצאות. נסה פילטר אחר.</td></tr>`;return}
+ body.innerHTML=rows.map(r=>{const wl=waLabel(r.wa),pl=payLabel(r.pay),rl=regLabel(r.reg),na=nextAction(r);return `<tr data-id="${r.id}"><td class="name-col"><div class="person"><div class="avatar">${r.name[0]}</div><div><div class="name">${r.name}</div><div class="phone">${r.phone}</div></div></div></td><td><b>${r.edition}</b><div class="mini">${r.date||'—'}</div></td><td>${pill(wl[0],wl[1])}</td><td>${pill(pl[0],pl[1])}</td><td>${pill(rl[0],rl[1])}</td><td>${r.seats}</td><td><span class="money">${r.amount==null?'—':'₪'+r.amount}</span></td><td>${r.source||'—'}</td><td><div class="next">${pill(na[0],na[1])}<button class="small-btn" data-act="next">בצע</button></div></td></tr>`}).join('');
+ body.querySelectorAll('tr[data-id]').forEach(tr=>tr.addEventListener('click',e=>{selected=data.find(x=>x.id==tr.dataset.id); openDrawer(selected)}));
+}
+function openDrawer(r){const d=document.getElementById('drawer'); d.classList.add('open'); d.setAttribute('aria-hidden','false'); document.getElementById('dName').textContent=r.name; document.getElementById('dPhone').textContent=r.phone; const wl=waLabel(r.wa),pl=payLabel(r.pay),rl=regLabel(r.reg); document.getElementById('dPills').innerHTML=pill(wl[0],wl[1])+pill(pl[0],pl[1])+pill(rl[0],rl[1]); document.getElementById('dFields').innerHTML=[['סדנה',r.edition],['מועד',r.date||'—'],['מקומות',r.seats],['סכום',r.amount==null?'—':'₪'+r.amount],['מקור',r.source||'—'],['הערות',r.notes||'אין']].map(x=>`<div class="field"><small>${x[0]}</small><b>${x[1]}</b></div>`).join(''); document.getElementById('dTimeline').innerHTML=`<div class="step">נקלט מטופס הרשמה</div><div class="step">סטטוס וואטסאפ: ${wl[0]}</div><div class="step">סטטוס תשלום: ${pl[0]}</div>`;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700)}
+document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>document.getElementById('drawer').classList.remove('open')));
+document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]'); if(!b)return; active=b.dataset.filter; document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.filter===active)); render();});
+document.querySelectorAll('[data-filter="needs"]').forEach(b=>b.addEventListener('click',()=>{active='needs';document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.filter==='needs'));render()}));
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value;render()});
+document.getElementById('compact').addEventListener('click',()=>{document.body.classList.add('compact');compact.classList.add('active');comfortable.classList.remove('active')});
+document.getElementById('comfortable').addEventListener('click',()=>{document.body.classList.remove('compact');comfortable.classList.add('active');compact.classList.remove('active')});
+document.getElementById('exportBtn').addEventListener('click',()=>toast('בפרודקשן זה יוריד CSV'));
+document.getElementById('waBtn').addEventListener('click',()=>toast('פותח WhatsApp עם הודעה מוכנה'));
+document.getElementById('markPaidBtn').addEventListener('click',()=>toast('סומן כשולם — בפרוטוטייפ בלבד'));
+document.getElementById('bitBtn').addEventListener('click',()=>toast('סומן: Bit נשלח'));
+document.getElementById('noteBtn').addEventListener('click',()=>toast('פתיחת הערה מהירה'));
+render();
+</script>
+</body>
+</html>
