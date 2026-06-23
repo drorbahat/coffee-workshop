@@ -248,11 +248,11 @@ try {
 
 /* ───── 13. Verify seats display uses ?? 1 not ||1 ───── */
 {
-  // Details panel seats
-  const ds = clientSrc.indexOf('id="det-seats"');
-  const dsLine = clientSrc.slice(ds, ds + 200).split('\n')[0];
-  assert(dsLine.includes('seats??1'), 'Details seats uses ?? 1 instead of || 1');
-  assert(!dsLine.includes('seats||1') && !dsLine.includes('seats ||1'), 'Details seats does NOT use || 1');
+  // Details panel seats — search for the pattern in the source (may use escaped quotes)
+  const ds = clientSrc.indexOf('det-seats');
+  const snippet = clientSrc.slice(ds, ds + 60);
+  assert(snippet.includes('seats??1'), 'Details seats uses ?? 1 instead of || 1');
+  assert(!snippet.includes('seats||1'), 'Details seats does NOT use || 1');
 }
 {
   // Table row seats
@@ -269,6 +269,34 @@ try {
   assert(dsBody.includes("parseInt(val,10)||0"), 'det-save-all seats uses ||0 not ||1');
   assert(!dsBody.includes("parseInt(val,10)||1"), 'det-save-all seats does NOT use ||1');
 }
+
+/* ───── 15. Sprint 1: Human-readable display status on cards ───── */
+assert(clientSrc.includes('computeDisplayStatus'), 'Client has computeDisplayStatus function');
+assert(clientSrc.includes('computeNextAction'), 'Client has computeNextAction function');
+assert(clientSrc.includes('display_status'), 'Client computes display_status in normRow');
+assert(clientSrc.includes('display_tone'), 'Client computes display_tone in normRow');
+assert(clientSrc.includes('next_action_label'), 'Client computes next_action_label in normRow');
+assert(clientSrc.includes('next_action_key'), 'Client computes next_action_key in normRow');
+assert(clientSrc.includes('card-status-row'), 'Client uses card-status-row instead of card-tags in cockpit cards');
+assert(!clientSrc.includes('card-tags'), 'Client no longer has card-tags class in cockpit cards (replaced by card-status-row)');
+assert(clientSrc.includes('details-hero'), 'Client has details-hero action-first header in details panel');
+assert(clientSrc.includes('details-hero-name'), 'Client renders hero name in details');
+assert(clientSrc.includes('details-hero-workshop'), 'Client renders hero workshop in details');
+assert(clientSrc.includes('details-hero-status'), 'Client renders hero status in details');
+assert(clientSrc.includes('פרטי הרשמה'), 'Details has section titled "פרטי הרשמה" (moved up, action-first)');
+assert(clientSrc.includes('display_status:'), 'display_status assigned from computeDisplayStatus');
+assert(clientSrc.includes('display_tone:'), 'display_tone assigned from computeDisplayStatus');
+assert(clientSrc.includes('next_action_label:'), 'next_action_label assigned from computeNextAction');
+assert(clientSrc.includes('next_action_key:'), 'next_action_key assigned from computeNextAction');
+assert(clientSrc.includes("'ספאם'"), 'computeDisplayStatus covers spam state');
+assert(clientSrc.includes("'בוטל'"), 'computeDisplayStatus covers cancelled state');
+assert(clientSrc.includes("'כלול בהרשמה'"), 'computeDisplayStatus covers group member state');
+assert(clientSrc.includes("'שולם ✓'"), 'computeDisplayStatus covers paid state');
+assert(clientSrc.includes("'מחכה לתשלום'"), 'computeDisplayStatus covers bit_request_sent state');
+assert(clientSrc.includes("'צריך הודעה'"), 'computeDisplayStatus covers pending whatsapp state');
+assert(clientSrc.includes("'פתח WhatsApp'"), 'computeNextAction produces open_wa for pending with phone');
+assert(clientSrc.includes("'סמן שולם'"), 'computeNextAction produces mark_paid for bit_request_sent');
+assert(clientSrc.includes("'פתח פרטים'"), 'computeNextAction produces details fallback');
 
 /* ───── Summary ───── */
 const total = passed + failed;
