@@ -44,6 +44,9 @@ export function renderAdminShell() {
     <div class="kpi-item closed"><div class="kpi-num">—</div><div class="kpi-label">שולם / מקומות</div></div>
   </section>
 
+  <!-- ── Capacity band ─────────────────── -->
+  <section class="capacity-band" id="capacity-band"></section>
+
   <!-- ── Filters ───────────────────────── -->
   <section class="filter-strip">
     <select id="filterWorkshop"><option value="all">כל הסדנאות</option></select>
