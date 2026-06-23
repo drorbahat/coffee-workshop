@@ -60,16 +60,16 @@ assertIn(src, 'Run `node scripts/migrate-crm-lite.mjs', 'Script tells user to ru
 /* ───── 4. Critical IDs present ───── */
 assertIn(src, 'TARGET_IDS', 'Script defines target IDs array');
 assertIn(src, '2, 6, 8, 9, 12, 14, 16, 17, 18, 19, 20, 21', 'All critical IDs present');
-assertIn(src, 'id 8', 'Row id=8 (חסידה)');
-assertIn(src, 'id 14', 'Row id=14 (יפתח)');
-assertIn(src, 'id 9', 'Row id=9 (Liraz)');
-assertIn(src, 'id 6', 'Row id=6 (דאלי canonical)');
-assertIn(src, 'id 2', 'Row id=2 (דאלי duplicate)');
-assertIn(src, 'id 18', 'Row id=18 (Shnir)');
-assertIn(src, 'id 21', 'Row id=21 (Yonatan)');
-assertIn(src, 'id 12', 'Row id=12 (Yana)');
-assertIn(src, 'id 20', 'Row id=20 (Hila)');
-assertIn(src, 'id 19', 'Row id=19 (Yana duplicate)');
+assertIn(src, 'id 8', 'Row id=8 update lead');
+assertIn(src, 'id 14', 'Row id=14 update lead');
+assertIn(src, 'id 9', 'Row id=9 masked-phone lead');
+assertIn(src, 'id 6', 'Row id=6 canonical lead');
+assertIn(src, 'id 2', 'Row id=2 duplicate lead');
+assertIn(src, 'id 18', 'Row id=18 primary group registration');
+assertIn(src, 'id 21', 'Row id=21 included attendee');
+assertIn(src, 'id 12', 'Row id=12 primary group registration');
+assertIn(src, 'id 20', 'Row id=20 included attendee');
+assertIn(src, 'id 19', 'Row id=19 duplicate registration');
 
 /* ───── 5. Clean values for each row ───── */
 // id 8: lead, awaiting_reply
@@ -123,12 +123,12 @@ assert(!src.includes('COMMIT;'), 'No COMMIT');
 assertIn(src, 'changedFieldsForClean', 'Script has changedFieldsForClean function');
 assertIn(src, 'Object.keys(clean)', 'Script iterates Object.keys(clean) to compare only explicit fields');
 assert(!src.includes("fieldsDiffer(current, clean)"), 'Script does NOT call fieldsDiffer(current, clean) — would compare ALL snapshot keys');
-// Verify omitted fields are not nulled: Liraz (id 9) omits registration_status and notes
+// Verify omitted fields are not nulled: id 9 omits registration_status and notes
 // The dry-run should NOT show these fields changing
-assertIn(src, "keep existing not_handled / pending whatsapp", 'id 9 (Liraz): comment confirms preserving registration_status and notes');
+assertIn(src, "keep existing not_handled / pending whatsapp", 'id 9: comment confirms preserving registration_status and notes');
 
 /* ───── 11. Readable Hebrew table ───── */
-assertIn(src, 'שם', 'Table header includes שם');
+assertIn(src, 'רשומה', 'Table header includes רשומה');
 assertIn(src, 'סיבה', 'Table header includes סיבה');
 assertIn(src, 'ערך נוכחי', 'Table header includes ערך נוכחי');
 assertIn(src, 'ערך חדש', 'Table header includes ערך חדש');

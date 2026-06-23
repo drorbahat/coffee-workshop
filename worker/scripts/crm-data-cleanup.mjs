@@ -196,12 +196,12 @@ function main() {
   /* 3. Build the deterministic plan ────────────────────────── */
   const plan = [];  // { id, name, clean: {fields}, reason }
 
-  // id 8 — חסידה (lead, awaiting_reply)
+  // id 8 — update lead (awaiting_reply)
   const r8 = rowById[8];
   if (r8) {
     plan.push({
       id: 8,
-      name: r8.name || 'חסידה',
+      name: 'row #8',
       clean: {
         record_type: 'lead',
         registration_status: 'lead',
@@ -214,12 +214,12 @@ function main() {
     });
   }
 
-  // id 14 — יפתח (same as 8)
+  // id 14 — update lead (awaiting_reply)
   const r14 = rowById[14];
   if (r14) {
     plan.push({
       id: 14,
-      name: r14.name || 'יפתח',
+      name: 'row #14',
       clean: {
         record_type: 'lead',
         registration_status: 'lead',
@@ -232,12 +232,12 @@ function main() {
     });
   }
 
-  // id 9 — Liraz (lead, keep not_handled/pending WA)
+  // id 9 — lead with masked phone (keep not_handled/pending WA)
   const r9 = rowById[9];
   if (r9) {
     plan.push({
       id: 9,
-      name: r9.name || 'Liraz',
+      name: 'row #9',
       clean: {
         record_type: 'lead',
         seats: 0,
@@ -248,12 +248,12 @@ function main() {
     });
   }
 
-  // id 6 — דאלי גורדון (canonical)
+  // id 6 — canonical update lead
   const r6 = rowById[6];
   if (r6) {
     plan.push({
       id: 6,
-      name: r6.name || 'דאלי גורדון',
+      name: 'row #6',
       clean: {
         record_type: 'lead',
         registration_status: 'lead',
@@ -266,7 +266,7 @@ function main() {
     });
   }
 
-  // id 2 — דאלי duplicate → cancelled
+  // id 2 — duplicate lead → cancelled
   const r2 = rowById[2];
   if (r2) {
     const existingNotes = (r2.notes || '').trim();
@@ -275,7 +275,7 @@ function main() {
       : `מוזג לתוך id 6. ${existingNotes}`.trim();
     plan.push({
       id: 2,
-      name: r2.name || 'דאלי (כפיל)',
+      name: 'row #2',
       clean: {
         registration_status: 'cancelled',
         seats: 0,
@@ -286,12 +286,12 @@ function main() {
     });
   }
 
-  // id 18 — Shnir (registration, 2 seats, 400 ILS, paid)
+  // id 18 — primary group registration (2 seats, 400 ILS, paid)
   const r18 = rowById[18];
   if (r18) {
     plan.push({
       id: 18,
-      name: r18.name || 'שניר פוקס',
+      name: 'row #18',
       clean: {
         record_type: 'registration',
         parent_registration_id: null,
@@ -303,12 +303,12 @@ function main() {
     });
   }
 
-  // id 21 — Yonatan (attendee, group_member, parent 18)
+  // id 21 — included attendee (group_member, parent 18)
   const r21 = rowById[21];
   if (r21) {
     plan.push({
       id: 21,
-      name: r21.name || 'יונתן',
+      name: 'row #21',
       clean: {
         record_type: 'attendee',
         registration_status: 'group_member',
@@ -318,16 +318,16 @@ function main() {
         payment_status: 'pending',
         crm_stage: 'closed',
       },
-      reason: 'משתתף בהרשמת שניר (id 18)',
+      reason: 'משתתף בהרשמת parent (id 18)',
     });
   }
 
-  // id 12 — Yana (registration, 2 seats, 400 ILS, paid)
+  // id 12 — primary group registration (2 seats, 400 ILS, paid)
   const r12 = rowById[12];
   if (r12) {
     plan.push({
       id: 12,
-      name: r12.name || 'יאנה',
+      name: 'row #12',
       clean: {
         record_type: 'registration',
         parent_registration_id: null,
@@ -339,12 +339,12 @@ function main() {
     });
   }
 
-  // id 20 — Hila (attendee, group_member, parent 12)
+  // id 20 — included attendee (group_member, parent 12)
   const r20 = rowById[20];
   if (r20) {
     plan.push({
       id: 20,
-      name: r20.name || 'הילה',
+      name: 'row #20',
       clean: {
         record_type: 'attendee',
         registration_status: 'group_member',
@@ -354,16 +354,16 @@ function main() {
         payment_status: 'pending',
         crm_stage: 'closed',
       },
-      reason: 'משתתפת בהרשמת יאנה (id 12)',
+      reason: 'משתתף בהרשמת parent (id 12)',
     });
   }
 
-  // id 19 — Yana duplicate (cancelled, pending)
+  // id 19 — duplicate registration (cancelled, pending)
   const r19 = rowById[19];
   if (r19) {
     plan.push({
       id: 19,
-      name: r19.name || 'יאנה (כפיל)',
+      name: 'row #19',
       clean: {
         registration_status: 'cancelled',
         payment_status: 'pending',
@@ -371,7 +371,7 @@ function main() {
         seats: 0,
         crm_stage: 'closed',
       },
-      reason: 'כפיל של יאנה — בוטל, סוגר',
+      reason: 'כפיל של הרשמה ראשית — בוטל, סוגר',
     });
   }
 
@@ -394,12 +394,12 @@ function main() {
     });
   }
 
-  /* 5. Review-only warnings (ids 16, 17 — Hillel) ──────────── */
+  /* 5. Review-only warnings (ids 16, 17 — manual review) ───── */
   const reviewIds = [16, 17];
   for (const id of reviewIds) {
     const row = rowById[id];
     if (row) {
-      console.log(`⚠  REVIEW-ONLY: id=${id} ${row.name || '(Hillel)'} — no automatic changes. Manual review needed.`);
+      console.log(`⚠  REVIEW-ONLY: id=${id} — no automatic changes. Manual review needed.`);
     }
   }
   if (reviewIds.some(id => rowById[id])) {
@@ -418,7 +418,7 @@ function main() {
   // Table header
   console.log(
     padRight('ID', 3) + ' ' +
-    padRight('שם', 16) + ' ' +
+    padRight('רשומה', 16) + ' ' +
     padRight('סיבה', 30) + ' ' +
     padRight('שדה', 22) + ' ' +
     padRight('ערך נוכחי', 16) + ' ' +

@@ -64,7 +64,7 @@ assertEq(recordType({ registration_status: 'new', edition: 'URU' }), 'registrati
 assertEq(isGroupMember({ record_type: 'attendee' }), true, 'isGroupMember: record_type attendee');
 assertEq(isGroupMember({ registration_status: 'registered_under_shnir' }), true, 'isGroupMember: registered_under_shnir');
 assertEq(isGroupMember({ registration_status: 'group_member' }), true, 'isGroupMember: group_member');
-assertEq(isGroupMember({ group_registration: 'כלול בהרשמת שניר' }), true, 'isGroupMember: group_registration contains כלול בהרשמת');
+assertEq(isGroupMember({ group_registration: 'כלול בהרשמת דוגמה' }), true, 'isGroupMember: group_registration contains כלול בהרשמת');
 assertEq(isGroupMember({ registration_status: 'new', edition: 'URU' }), false, 'isGroupMember: regular registration false');
 
 /* ───── isBillableRow ───── */
@@ -168,8 +168,8 @@ assertEq(workshopKey({ edition: 'עדכונים — סדנת אספרסו', requ
 
 /* ───── normalizePhoneForWa ───── */
 
-// 3a. '0543178959' → '972543178959'
-assertEq(normalizePhoneForWa('0543178959'), '972543178959', 'normalizePhoneForWa: 0543178959 → 972543178959');
+// 3a. sample local mobile → international format
+assertEq(normalizePhoneForWa('0541111111'), '972541111111', 'normalizePhoneForWa: sample local mobile → international format');
 
 // 3b. '+972****4567' → null (masked with asterisks)
 assertEq(normalizePhoneForWa('+972****4567'), null, 'normalizePhoneForWa: +972****4567 → null (masked)');
@@ -226,7 +226,7 @@ assertEq(statusLabel('crm_stage', 'closed'), 'סגור', 'statusLabel: crm_stage
 const input = {
   id: 42,
   name: 'דורון',
-  phone: '0543178959',
+  phone: '0541111111',
   whatsapp_status: 'pending',
   payment_status: 'bit_request_sent',
   registration_status: 'new',
@@ -244,7 +244,7 @@ assertEq(out.workshop_key, 'uru', 'normalizeRegistration: computes workshop_key'
 assertEq(out.whatsapp_label, 'לא נשלחה הודעה', 'normalizeRegistration: computes whatsapp_label');
 assertEq(out.payment_label, 'Bit נשלח', 'normalizeRegistration: computes payment_label');
 assertEq(out.registration_label, 'חדש', 'normalizeRegistration: computes registration_label');
-assertEq(out.wa_phone, '972543178959', 'normalizeRegistration: computes wa_phone');
+assertEq(out.wa_phone, '972541111111', 'normalizeRegistration: computes wa_phone');
 
 // Ensure original object is not mutated
 assertEq(input.lane, undefined, 'normalizeRegistration: original object not mutated (lane absent)');
@@ -254,7 +254,7 @@ assertEq(input.lane, undefined, 'normalizeRegistration: original object not muta
 // 5a. group_member with parent_registration_id → payment_label shows parent link
 const gmWithParent = normalizeRegistration({
   id: 21,
-  name: 'יונתן',
+  name: 'משתתף לדוגמה',
   phone: '0540000021',
   registration_status: 'group_member',
   parent_registration_id: 18,
@@ -269,7 +269,7 @@ assertEq(gmWithParent._is_group_member, true, 'normalizeRegistration: group_memb
 // 5b. group_member without parent_registration_id → generic included text
 const gmNoParent = normalizeRegistration({
   id: 22,
-  name: 'הילה',
+  name: 'משתתפת לדוגמה',
   phone: '0540000022',
   registration_status: 'group_member',
   payment_status: 'pending',
@@ -284,7 +284,7 @@ assertEq(gmNoParent._is_group_member, true, 'normalizeRegistration: group_member
 const regRow = normalizeRegistration({
   id: 1,
   name: 'דורון',
-  phone: '0543178959',
+  phone: '0541111111',
   registration_status: 'new',
   payment_status: 'pending',
   whatsapp_status: 'pending',
@@ -313,14 +313,14 @@ assertEq(gmPaid.payment_label, 'כלול בהרשמה #18', 'normalizeRegistrati
 // parentSummary with allItems lookup → resolves parent name
 const summary1 = parentSummary(
   { registration_status: 'group_member', parent_registration_id: 18, record_type: 'attendee' },
-  [{ id: 18, name: 'יאנה' }]
+  [{ id: 18, name: 'נועה' }]
 );
-assertEq(summary1, 'כלול בהרשמת יאנה', 'parentSummary: resolves parent name from allItems');
+assertEq(summary1, 'כלול בהרשמת נועה', 'parentSummary: resolves parent name from allItems');
 
 // parentSummary with allItems but no match → falls back to ID
 const summary2 = parentSummary(
   { registration_status: 'group_member', parent_registration_id: 99, record_type: 'attendee' },
-  [{ id: 18, name: 'יאנה' }]
+  [{ id: 18, name: 'נועה' }]
 );
 assertEq(summary2, 'כלול בהרשמה #99', 'parentSummary: no matching parent → fallback to #ID');
 
@@ -339,27 +339,27 @@ assertEq(parentSummary({ registration_status: 'group_member', record_type: 'atte
 /* ───── waDraftMessage ───── */
 
 // 6a. Masked phone → null
-assertEq(waDraftMessage({ phone: '+972****4751', name: 'Liraz' }), null, 'waDraftMessage: masked phone → null');
+assertEq(waDraftMessage({ phone: '+972****4751', name: 'Sample Masked' }), null, 'waDraftMessage: masked phone → null');
 
 // 6b. Generates URL with correct phone
 const resultB = waDraftMessage({
-  phone: '0543178959',
-  name: 'הילה לוין',
+  phone: '0541111111',
+  name: 'נועה כהן',
   edition: 'URU · תל אביב',
   workshop_date: 'שישי 3.7 11:00–12:30',
   amount_ils: 200,
   seats: 1,
 });
 assert(resultB !== null, 'waDraftMessage: should not be null');
-assertEq(resultB.phone, '972543178959', 'waDraftMessage: correct phone normalization');
-assert(resultB.url.includes('wa.me/972543178959'), 'waDraftMessage: URL contains correct phone');
-assert(resultB.message.includes('הילה'), 'waDraftMessage: message includes first name');
+assertEq(resultB.phone, '972541111111', 'waDraftMessage: correct phone normalization');
+assert(resultB.url.includes('wa.me/972541111111'), 'waDraftMessage: URL contains correct phone');
+assert(resultB.message.includes('נועה'), 'waDraftMessage: message includes first name');
 assert(resultB.message.includes('עורו'), 'waDraftMessage: message includes venue (עורו)');
 
 // 6c. Group registration mentions multiple seats
 const resultC = waDraftMessage({
-  phone: '0502234126',
-  name: 'שניר פוקס',
+  phone: '0501111126',
+  name: 'משפחת דוגמה',
   edition: 'URU · תל אביב',
   seats: 2,
   amount_ils: 200,
@@ -369,7 +369,7 @@ assert(resultC.message.includes('400'), 'waDraftMessage: group amount shows tota
 
 // 6d. Kanopi venue
 const resultD = waDraftMessage({
-  phone: '0546171377',
+  phone: '0541111137',
   name: 'הלל כהן',
   edition: 'קנופי · ירושלים',
   workshop_date: 'שני 15.6 16:00–17:30',
