@@ -581,6 +581,7 @@ export const adminClientJs = `
 
     const rt=reg._record_type||clientRecordType(reg);
     const gm=reg._is_group_member||clientIsGroupMember(reg);
+    const waSent=reg.whatsapp_status==='outreach_sent'||reg.whatsapp_status==='sent';
 
     // Resolve parent name from allItems for a friendlier display
     const parentName=gm?clientParentName(reg):null;
@@ -728,7 +729,6 @@ export const adminClientJs = `
       const _rt=rt;
       const _gm=gm;
       const waPending=reg.whatsapp_status==='pending';
-      const waSent=reg.whatsapp_status==='outreach_sent'||reg.whatsapp_status==='sent';
       const waAlreadySent=['outreach_sent','sent','awaiting_reply','replied_interested'].includes(reg.whatsapp_status);
 
       let btns='';
