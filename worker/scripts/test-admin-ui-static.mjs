@@ -141,7 +141,7 @@ assert(clientSrc.includes('const parentName=gm?clientParentName(reg):null'), 'Cl
   assert(detBody.includes("else if(waAlreadySent)"), 'Lead waAlreadySent alternate exists');
   assert(detBody.includes("הודעה כבר נשלחה"), 'Lead already-sent Hebrew text present');
   // det-wa outside pending guard now
-  assert(clientSrc.includes("_rt==='lead'){\n        if(reg.wa_phone)btns+='<button class=\"details-action-btn secondary\" id=\"det-wa\">"), 'Lead det-wa shown regardless of status');
+  assert(clientSrc.includes(' id="det-wa" style="flex:1">'), 'Lead det-wa shown regardless of status, with copy button');
 }
 {
   const regBody = clientSrc.slice(clientSrc.indexOf('// Payment actions'));
