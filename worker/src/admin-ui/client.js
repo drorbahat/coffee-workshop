@@ -52,22 +52,31 @@ export const adminClientJs = `
       return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת חליטות.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
     }
 
-    const edition=reg.edition||'';
-    const date=reg.workshop_date||reg.date||'';
-    const amount=reg.amount_ils;
+    // Find workshop config — either from matching workshop_key or from kv key in capacity summary
+    const wk=reg.workshop_key||'';
+    const workshops=state.workshops||{};
+    const wsc=state.workshop_capacity_summary||{};
+    // Try to match: find workshop entry whose workshop_key matches reg's workshop_key
+    let ws=null;
+    for(const kwKey of Object.keys(workshops)){ if(workshops[kwKey].workshop_key===wk){ ws=workshops[kwKey]; break; } }
+    if(!ws){
+      for(const kwKey of Object.keys(wsc)){
+        if(wsc[kwKey].venue&&(kwKey.includes('uru')&&wk==='uru'||kwKey.includes('filter')&&wk==='kanopi'||wk===wsc[kwKey].workshop_key)){ ws=wsc[kwKey]; break; }
+      }
+    }
+
+    const date=reg.workshop_date||reg.date||(ws?ws.date_label:'');
+    const amount=reg.amount_ils||(ws?ws.price:null);
     const seats=reg.seats||1;
     const isGroup=seats>1;
 
-    const isURU=edition.includes('URU')||edition.includes('עורו')||edition.includes('תל אביב');
-    const isKanopi=edition.includes('קנופי')||edition.includes('ירושלים');
-
-    let venue='';
-    if(isURU) venue='בעורו בתל אביב, הכישור 1 ביתן 107';
-    else if(isKanopi) venue='בקנופי בירושלים, מבוא המתמיד 6';
-
     let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+String.fromCharCode(10);
-    if(isURU||isKanopi) msg+='ראיתי שנרשמת לסדנת החליטות '+venue+(date?', '+date:'')+'.'+String.fromCharCode(10);
-    else msg+='תודה שנרשמת לסדנת הקפה'+(date?' ב'+date:'')+'!'+String.fromCharCode(10);
+
+    if(ws&&ws.venue){
+      msg+='ראיתי שנרשמת לסדנת החליטות ב'+ws.venue+(ws.address?', '+ws.address:'')+(date?', '+date:'')+'.'+String.fromCharCode(10);
+    }else{
+      msg+='תודה שנרשמת לסדנת הקפה'+(date?' ב'+date:'')+'!'+String.fromCharCode(10);
+    }
 
     if(amount){
       const total=amount*seats;
@@ -307,6 +316,7 @@ export const adminClientJs = `
       if(!res.ok)throw new Error('HTTP '+res.status);
       const data=await res.json();
       state.allItems=(data.registrations||[]).map(normRow);
+      state.workshops=data.workshops||{};
       state.workshop_capacity_summary=data.workshop_capacity_summary||null;
       // Now that allItems is populated, re-derive payment_label for group
       // members so we can show parent name instead of just parent ID.

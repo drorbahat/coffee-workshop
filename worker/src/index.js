@@ -17,18 +17,26 @@ const ADMIN_REGISTRATION_SELECT = `SELECT
 FROM registrations`;
 const WORKSHOPS = {
   filter_2026_06_15: {
-    title: 'סדנת חליטות ביתיות — קנופי ירושלים',
+    title: 'סדנת חליטות — קנופי ירושלים',
     date_label: 'שני 15.6 · 16:00–17:30',
+    venue: 'קנופי',
+    address: 'מבוא המתמיד 6, ירושלים',
+    price: 180,
     capacity: 8,
     confirmed: 0,
     open: true,
+    workshop_key: 'kanopi',
   },
   uru_2026_07_03: {
-    title: 'סדנת חליטות ביתיות — URU תל אביב',
+    title: 'סדנת חליטות — URU תל אביב',
     date_label: 'שישי 3.7 · 11:00–12:30',
+    venue: 'עורו',
+    address: 'הכישור 1 ביתן 107, תל אביב',
+    price: 200,
     capacity: 8,
     confirmed: 0,
     open: true,
+    workshop_key: 'uru',
   },
 };
 
@@ -176,6 +184,20 @@ export default {
       if (!WORKSHOPS[key]) return json({ ok: false, error: 'unknown workshop' }, env, 400);
       const status = await getStatus(env);
       const workshop = status[key] || { ...WORKSHOPS[key] };
+
+      if (action === 'save_workshop') {
+        // Update workshop metadata (title, date, venue, address, price, capacity)
+        if (body.title !== undefined) workshop.title = String(body.title);
+        if (body.date_label !== undefined) workshop.date_label = String(body.date_label);
+        if (body.venue !== undefined) workshop.venue = String(body.venue);
+        if (body.address !== undefined) workshop.address = String(body.address);
+        if (body.price !== undefined) workshop.price = Number(body.price) || 0;
+        if (body.capacity !== undefined) workshop.capacity = Math.max(1, Number(body.capacity) || 8);
+        status[key] = workshop;
+        await env.COFFEE_WORKSHOP.put(STATUS_KEY, JSON.stringify(status));
+        return json({ ok: true, workshop }, env);
+      }
+
       const capacity = Number(workshop.capacity || 8);
       let confirmed = Number(workshop.confirmed || 0);
 
@@ -209,6 +231,11 @@ export default {
     if (url.pathname === '/admin/export.csv') {
       if (!(await isAuthed(request, env))) return html(loginPage(), env);
       if (request.method === 'GET') return handleCsvExport(env);
+    }
+
+    if (url.pathname === '/admin/workshop-settings') {
+      if (!(await isAuthed(request, env))) return html(loginPage(), env);
+      if (request.method === 'GET') return handleWorkshopSettings(env);
     }
 
     if (url.pathname === '/admin/registration/update' && request.method === 'POST') {
@@ -467,10 +494,30 @@ async function handleRegistrationsJson(env) {
       manual_reserved,
       open: ws.open !== false && public_confirmed < capacity,
       mismatch: public_confirmed !== paid_seats,
+      title: ws.title || '',
+      date_label: ws.date_label || '',
+      venue: ws.venue || '',
+      address: ws.address || '',
+      price: ws.price || 0,
     };
   }
 
-  return json({ ok: true, registrations: items, counts, filters, workshop_capacity_summary }, env);
+  // Include full workshop config for client-side WhatsApp templates etc.
+  const workshops = {};
+  for (const [key, ws] of Object.entries(status)) {
+    workshops[key] = {
+      title: ws.title || '',
+      date_label: ws.date_label || '',
+      venue: ws.venue || '',
+      address: ws.address || '',
+      price: ws.price || 0,
+      capacity: Number(ws.capacity || 0),
+      open: ws.open !== false && Number(ws.confirmed || 0) < Number(ws.capacity || 0),
+      workshop_key: KV_KEY_TO_WORKSHOP_KEY[key] || key,
+    };
+  }
+
+  return json({ ok: true, registrations: items, counts, filters, workshops, workshop_capacity_summary }, env);
 }
 
 const UPDATE_COLUMN_MAP = Object.freeze({
@@ -578,6 +625,82 @@ async function handleCsvExport(env) {
     'Cache-Control': 'no-store',
   };
   return new Response(csv, { status: 200, headers: h });
+}
+
+async function handleWorkshopSettings(env) {
+  const status = await getStatus(env);
+  const forms = Object.entries(WORKSHOPS).map(([key, w]) => {
+    const current = status[key] || w;
+    const fields = [
+      { id: 'title', label: 'שם הסדנה', value: current.title || '' },
+      { id: 'date_label', label: 'תאריך (מוצג באתר)', value: current.date_label || '' },
+      { id: 'venue', label: 'שם המקום', value: current.venue || '' },
+      { id: 'address', label: 'כתובת', value: current.address || '' },
+      { id: 'price', label: 'מחיר (₪)', value: current.price || '' },
+      { id: 'capacity', label: 'קיבולת (מקומות)', value: current.capacity || 8 },
+    ];
+    return `<form class="ws-form" data-key="${escapeHtml(key)}">
+      <h2>${escapeHtml(current.title || key)}</h2>
+      ${fields.map(f => `
+        <label>${escapeHtml(f.label)}
+          <input type="${f.id === 'capacity' || f.id === 'price' ? 'number' : 'text'}" 
+                 data-field="${f.id}" value="${escapeHtml(String(f.value))}" 
+                 ${f.id === 'capacity' ? 'min=1' : ''} 
+                 ${f.id === 'price' ? 'min=0' : ''}>
+        </label>`).join('')}
+      <button type="submit">שמור</button>
+      <span class="ws-msg"></span>
+    </form>`;
+  }).join('');
+
+  return html(`<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הגדרות סדנאות</title>
+<style>${baseCss()}
+body{display:flex;flex-direction:column;align-items:center;gap:18px;padding:40px 20px}
+.ws-form{width:min(520px,100%);background:white;border:1px solid #eadfce;border-radius:24px;padding:24px;box-shadow:0 18px 50px rgba(26,14,8,.08)}
+.ws-form h2{margin:0 0 16px;font-size:1.2rem}
+.ws-form label{display:block;margin-bottom:10px;font-size:.9rem}
+.ws-form input{width:100%;padding:10px 12px;border:1px solid #eadfce;border-radius:12px;font-family:inherit;font-size:.95rem;margin-top:4px}
+.ws-form button{margin-top:12px;padding:10px 20px;background:#1a0e08;color:white;border:none;border-radius:14px;font-family:inherit;font-weight:700;cursor:pointer;width:auto}
+.ws-form button:disabled{opacity:.5}
+.ws-msg{font-size:.85rem;margin-right:12px}
+.ws-msg.ok{color:#286b35}
+.ws-msg.err{color:#8a2a22}
+nav{width:min(520px,100%);display:flex;gap:12px;justify-content:flex-end}
+nav a{color:#1a0e08;text-decoration:none;font-weight:700;font-size:.9rem;padding:8px 16px;border:1px solid #eadfce;border-radius:12px;background:white}
+nav a:hover{background:#fbfaf8}
+</style>
+</head>
+<body>
+<nav>
+  <a href="/admin/registrations">חזרה להרשמות</a>
+  <form method="post" action="/admin/logout"><button class="ghost" type="submit" style="background:transparent;color:#7a6657;padding:8px 10px;width:auto;font-family:inherit">יציאה</button></form>
+</nav>
+${forms}
+<script>
+document.querySelectorAll('.ws-form').forEach(f=>{
+  f.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const btn=f.querySelector('button');
+    const msg=f.querySelector('.ws-msg');
+    btn.disabled=true;msg.textContent='שומר...';msg.className='ws-msg';
+    const body={key:f.dataset.key,action:'save_workshop'};
+    f.querySelectorAll('[data-field]').forEach(i=>{body[i.dataset.field]=i.value});
+    try{
+      const r=await fetch('/admin/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();
+      if(d.ok){msg.textContent='נשמר ✓';msg.className='ws-msg ok'}
+      else{msg.textContent='שגיאה: '+(d.error||'')}
+    }catch(err){msg.textContent='שגיאת רשת';msg.className='ws-msg err'}
+    btn.disabled=false;
+  });
+});
+</script>
+</body>
+</html>`, env);
 }
 
 async function handleRegistrationUpdate(request, env) {
