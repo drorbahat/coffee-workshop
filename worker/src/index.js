@@ -17,8 +17,10 @@ const ADMIN_REGISTRATION_SELECT = `SELECT
 FROM registrations`;
 const WORKSHOPS = {
   filter_2026_06_15: {
-    title: 'סדנת חליטות — קנופי ירושלים',
-    date_label: 'שני 15.6 · 16:00–17:30',
+    workshop_type: 'סדנת חליטות ביתיות',
+    date_label: 'שני 15.6',
+    start_time: '16:00',
+    end_time: '17:30',
     venue: 'קנופי',
     address: 'מבוא המתמיד 6, ירושלים',
     price: 180,
@@ -28,10 +30,12 @@ const WORKSHOPS = {
     workshop_key: 'kanopi',
   },
   uru_2026_07_03: {
-    title: 'סדנת חליטות — URU תל אביב',
-    date_label: 'שישי 3.7 · 11:00–12:30',
-    venue: 'עורו',
-    address: 'הכישור 1 ביתן 107, תל אביב',
+    workshop_type: 'סדנת חליטות ביתיות',
+    date_label: 'שישי 3.7',
+    start_time: '11:00',
+    end_time: '12:30',
+    venue: 'URU',
+    address: 'הכישור 1 ביתן 107, תל אביב - יפו',
     price: 200,
     capacity: 8,
     confirmed: 0,
@@ -186,9 +190,12 @@ export default {
       const workshop = status[key] || { ...WORKSHOPS[key] };
 
       if (action === 'save_workshop') {
-        // Update workshop metadata (title, date, venue, address, price, capacity)
-        if (body.title !== undefined) workshop.title = String(body.title);
+        // Update workshop metadata
+        if (body.workshop_type !== undefined) workshop.workshop_type = String(body.workshop_type);
+        if (body.workshop_type_custom && body.workshop_type_custom.trim()) workshop.workshop_type = String(body.workshop_type_custom).trim();
         if (body.date_label !== undefined) workshop.date_label = String(body.date_label);
+        if (body.start_time !== undefined) workshop.start_time = String(body.start_time);
+        if (body.end_time !== undefined) workshop.end_time = String(body.end_time);
         if (body.venue !== undefined) workshop.venue = String(body.venue);
         if (body.address !== undefined) workshop.address = String(body.address);
         if (body.price !== undefined) workshop.price = Number(body.price) || 0;
@@ -506,8 +513,11 @@ async function handleRegistrationsJson(env) {
   const workshops = {};
   for (const [key, ws] of Object.entries(status)) {
     workshops[key] = {
-      title: ws.title || '',
+      workshop_type: ws.workshop_type || '',
+      title: ws.workshop_type || '',  // for backward compat — same as workshop_type
       date_label: ws.date_label || '',
+      start_time: ws.start_time || '',
+      end_time: ws.end_time || '',
       venue: ws.venue || '',
       address: ws.address || '',
       price: ws.price || 0,
@@ -629,25 +639,34 @@ async function handleCsvExport(env) {
 
 async function handleWorkshopSettings(env) {
   const status = await getStatus(env);
+  const WORKSHOP_TYPES = ['סדנת חליטות ביתיות', 'סדנת אספרסו'];
   const forms = Object.entries(WORKSHOPS).map(([key, w]) => {
     const current = status[key] || w;
+    const wt = current.workshop_type || 'סדנת חליטות ביתיות';
+    const typeOptions = WORKSHOP_TYPES.map(t => 
+      `<option value="${escapeHtml(t)}" ${t===wt?'selected':''}>${escapeHtml(t)}</option>`
+    ).join('');
     const fields = [
-      { id: 'title', label: 'שם הסדנה', value: current.title || '' },
+      { html: `<label>סוג הסדנה<select data-field="workshop_type" style="width:100%;padding:10px 12px;border:1px solid #eadfce;border-radius:12px;font-family:inherit;font-size:.95rem;margin-top:4px">${typeOptions}</select><input data-field="workshop_type_custom" placeholder="או הקלידו סוג חדש..." style="width:100%;padding:10px 12px;border:1px solid #eadfce;border-radius:12px;font-family:inherit;font-size:.95rem;margin-top:4px"></label>` },
       { id: 'date_label', label: 'תאריך (מוצג באתר)', value: current.date_label || '' },
+      { id: 'start_time', label: 'שעת התחלה', value: current.start_time || '' },
+      { id: 'end_time', label: 'שעת סיום', value: current.end_time || '' },
       { id: 'venue', label: 'שם המקום', value: current.venue || '' },
       { id: 'address', label: 'כתובת', value: current.address || '' },
       { id: 'price', label: 'מחיר (₪)', value: current.price || '' },
       { id: 'capacity', label: 'קיבולת (מקומות)', value: current.capacity || 8 },
     ];
     return `<form class="ws-form" data-key="${escapeHtml(key)}">
-      <h2>${escapeHtml(current.title || key)}</h2>
-      ${fields.map(f => `
-        <label>${escapeHtml(f.label)}
-          <input type="${f.id === 'capacity' || f.id === 'price' ? 'number' : 'text'}" 
+      <h2>${escapeHtml(current.workshop_type||key)} — ${escapeHtml(current.venue||'')}</h2>
+      ${fields.map(f => {
+        if(f.html) return f.html;
+        return `<label>${escapeHtml(f.label)}
+          <input type="${f.id==='capacity'||f.id==='price'?'number':'text'}" 
                  data-field="${f.id}" value="${escapeHtml(String(f.value))}" 
-                 ${f.id === 'capacity' ? 'min=1' : ''} 
-                 ${f.id === 'price' ? 'min=0' : ''}>
-        </label>`).join('')}
+                 ${f.id==='capacity'?'min=1':''} 
+                 ${f.id==='price'?'min=0':''}>
+        </label>`;
+      }).join('')}
       <button type="submit">שמור</button>
       <span class="ws-msg"></span>
     </form>`;
@@ -966,8 +985,9 @@ function adminPage() {
   <main class="card" data-key="${key}">
     <div class="top">
       <div>
-        <h1>${escapeHtml(w.title)}</h1>
-        <p>${escapeHtml(w.date_label)}</p>
+        <h1>${escapeHtml(w.workshop_type||key)}</h1>
+        <p>${escapeHtml(w.date_label||'')} · ${escapeHtml(w.start_time||'')}–${escapeHtml(w.end_time||'')}</p>
+        <p>${escapeHtml(w.venue||'')} · ${escapeHtml(w.address||'')}</p>
       </div>
     </div>
 
