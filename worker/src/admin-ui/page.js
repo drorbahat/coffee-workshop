@@ -26,6 +26,7 @@ export function renderAdminShell() {
       <span class="last-refresh" id="lastRefresh">טוען...</span>
       <input type="search" class="global-search" id="filterSearch" placeholder="חיפוש שם, טלפון, סדנה…" autocomplete="off">
       <button class="icon-btn" id="refreshBtn" title="רענן">רענן</button>
+      <a href="/admin/workshop-settings" class="link-btn" title="הגדרות סדנאות">⚙️</a>
       <a href="/admin/export.csv" class="link-btn" title="ייצוא CSV">CSV</a>
     </div>
   </header>
