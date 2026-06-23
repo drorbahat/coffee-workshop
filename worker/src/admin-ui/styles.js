@@ -176,6 +176,56 @@ body{
 .kpi-item.wait .kpi-num{color:var(--lane-wait)}
 .kpi-item.closed .kpi-num{color:var(--lane-closed)}
 
+/* ── Capacity band ──────────────────────────── */
+.capacity-band{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:16px;
+}
+.capacity-card{
+  background:var(--surface);
+  border:1px solid var(--hairline);
+  border-radius:var(--radius);
+  padding:10px 14px;
+}
+.capacity-card.capacity-mismatch-card{
+  border-color:var(--red);
+  background:var(--red-bg);
+}
+.capacity-title{
+  font-size:.85rem;
+  font-weight:700;
+  color:var(--text);
+  margin-bottom:4px;
+}
+.capacity-numbers{
+  font-size:.8rem;
+  color:var(--text-secondary);
+}
+.capacity-num{
+  font-weight:700;
+  font-size:1.1rem;
+  color:var(--text);
+}
+.capacity-den{
+  color:var(--text-tertiary);
+}
+.capacity-label{
+  font-size:.72rem;
+  color:var(--text-tertiary);
+}
+.capacity-reserved{
+  font-size:.72rem;
+  color:var(--amber);
+}
+.capacity-mismatch{
+  margin-top:6px;
+  font-size:.75rem;
+  font-weight:600;
+  color:var(--red);
+}
+
 /* ── Filters ────────────────────────────────── */
 .filter-strip{
   display:flex;

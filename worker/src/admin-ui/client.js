@@ -193,6 +193,7 @@ export const adminClientJs = `
   const state={
     items:[],
     allItems:[],
+    workshop_capacity_summary:null,
     activeTab:'cockpit',
     filters:{workshop:'all',whatsapp:'all',payment:'all',registration:'all',record_type:'all',crm_stage:'all',quick:'all',search:'',showCancelled:false},
     selectedId:null,
@@ -264,6 +265,7 @@ export const adminClientJs = `
       if(!res.ok)throw new Error('HTTP '+res.status);
       const data=await res.json();
       state.allItems=(data.registrations||[]).map(normRow);
+      state.workshop_capacity_summary=data.workshop_capacity_summary||null;
       // Now that allItems is populated, re-derive payment_label for group
       // members so we can show parent name instead of just parent ID.
       state.allItems.forEach(r=>{
@@ -393,6 +395,34 @@ export const adminClientJs = `
       '<div class="kpi-item needs"><div class="kpi-num">'+needs+'</div><div class="kpi-label">צריך טיפול</div></div>'+
       '<div class="kpi-item wait"><div class="kpi-num">'+(open_leads+closing)+'</div><div class="kpi-label">מחכה לתשובה</div></div>'+
       '<div class="kpi-item closed"><div class="kpi-num">'+paidSeats+'</div><div class="kpi-label">שולם / מקומות</div></div>';
+  }
+
+  /* ── Render capacity summary ────────────────── */
+  function renderCapacitySummary(){
+    const el=document.getElementById('capacity-band');
+    if(!el)return;
+    const summary=state.workshop_capacity_summary;
+    if(!summary||!Object.keys(summary).length){
+      el.innerHTML='';
+      return;
+    }
+    const labels={filter_2026_06_15:'קנופי ירושלים',uru_2026_07_03:'URU תל אביב'};
+    el.innerHTML=Object.entries(summary).map(([key,ws])=>{
+      const title=labels[key]||key;
+      const openDot=ws.open?'🟢':'🔴';
+      const mismatchHtml=ws.mismatch
+        ? '<div class="capacity-mismatch">⚠️ פער: האתר מראה '+ws.public_confirmed+', שילמו '+ws.paid_seats+'</div>'
+        : '';
+      return '<div class="capacity-card'+(ws.mismatch?' capacity-mismatch-card':'')+'">'+
+        '<div class="capacity-title">'+openDot+' '+esc(title)+'</div>'+
+        '<div class="capacity-numbers">'+
+          '<span class="capacity-num">'+ws.paid_seats+'</span>/<span class="capacity-den">'+ws.capacity+'</span>'+
+          ' <span class="capacity-label">שילמו</span>'+
+          (ws.manual_reserved>0?' · <span class="capacity-reserved">'+ws.manual_reserved+' שמורים ידנית</span>':'')+
+        '</div>'+
+        mismatchHtml+
+      '</div>';
+    }).join('');
   }
 
   /* ── Render cockpit ─────────────────────────── */
@@ -1002,6 +1032,7 @@ export const adminClientJs = `
   function renderAll(){
     const filtered=applyFilters(state.allItems);
     renderKPI(filtered);
+    renderCapacitySummary();
     renderCockpit(filtered);
     renderTable(filtered);
     // Update last refresh time
