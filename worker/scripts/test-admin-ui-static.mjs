@@ -298,6 +298,23 @@ assert(clientSrc.includes("'פתח WhatsApp'"), 'computeNextAction produces open
 assert(clientSrc.includes("'סמן שולם'"), 'computeNextAction produces mark_paid for bit_request_sent');
 assert(clientSrc.includes("'פתח פרטים'"), 'computeNextAction produces details fallback');
 
+/* ───── Sprint 4: search, WhatsApp templates, capacity, redirect ───── */
+assert(pageSrc.includes('filterSearch'), 'Page shell has filterSearch input');
+assert(clientSrc.includes('filters.search=this.value'), 'Client wires filterSearch input event');
+assert(clientSrc.includes('if(f.search)'), 'applyFilters checks f.search');
+assert(clientSrc.includes('h.includes(f.search.toLowerCase())'), 'applyFilters does case-insensitive search');
+assert(clientSrc.includes('waDraftMessage(reg)'), 'Client has waDraftMessage helper');
+assert(clientSrc.includes('waUrlWithMessage(reg)'), 'Client has waUrlWithMessage helper');
+assert(clientSrc.includes('encodeURIComponent(waDraftMessage'), 'WhatsApp URL encodes drafted message');
+assert(clientSrc.includes('id="det-wa-copy"'), 'Client has det-wa-copy copy button');
+assert(clientSrc.includes('navigator.clipboard.writeText'), 'Copy button uses clipboard API');
+assert(clientSrc.includes('הודעה הועתקה'), 'Copy shows toast on success');
+assert(clientSrc.includes('renderKPI('), 'Client calls renderKPI');
+assert(pageSrc.includes('id="kpi-band"'), 'Page shell has kpi-band element');
+assert(clientSrc.includes('renderCapacitySummary('), 'Client calls renderCapacitySummary');
+assert(clientSrc.includes('workshop_capacity_summary'), 'Client reads workshop_capacity_summary');
+assert(clientSrc.includes('mismatch'), 'Client checks mismatch flag');
+
 /* ───── Summary ───── */
 const total = passed + failed;
 console.log(`\n${total} checks: ${passed} passed, ${failed} failed`);
