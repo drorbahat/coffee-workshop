@@ -1,4 +1,4 @@
-import { normalizeRegistration, isBillableRow } from './registration-normalize.js';
+import { normalizeRegistration, isBillableRow, recordType } from './registration-normalize.js';
 
 import { renderRegistrationsAdminPage } from './admin-registrations-ui.js';
 
@@ -30,6 +30,13 @@ const WORKSHOPS = {
     confirmed: 0,
     open: true,
   },
+};
+
+// Maps KV status keys to workshop_key values from registration-normalize.js
+// so capacity summary can match KV public status with D1 paid seats.
+const KV_KEY_TO_WORKSHOP_KEY = {
+  filter_2026_06_15: 'kanopi',
+  uru_2026_07_03: 'uru',
 };
 
 // ───── Helper functions ────────────────────────────────────────────────────
@@ -410,12 +417,22 @@ async function handleRegistrationsJson(env) {
 
   const items = (rows.results || []).map(normalizeRegistration);
 
+  // Compute paid_seats per workshop key from D1 (billable, paid rows)
+  const paidSeatsByKey = {};
+  for (const r of items) {
+    if (isBillableRow(r) && r.payment_status === 'paid') {
+      const key = r.workshop_key || 'other';
+      paidSeatsByKey[key] = (paidSeatsByKey[key] || 0) + (Number(r.seats) || 0);
+    }
+  }
+
   const counts = {
     total: items.length,
     needs_action: items.filter(r => r.lane === 'needs_action').length,
     open_leads: items.filter(r => r.lane === 'open_leads').length,
     needs_closing: items.filter(r => r.lane === 'needs_closing').length,
     waiting_payment: items.filter(r => r.lane === 'waiting_payment').length,
+    waitlist: items.filter(r => r.lane === 'waitlist').length,
     closed: items.filter(r => r.lane === 'closed').length,
     no_whatsapp: items.filter(r => r.whatsapp_status === 'pending').length,
     unpaid: items.filter(r => isBillableRow(r) && r.payment_status !== 'paid').length,
@@ -430,12 +447,31 @@ async function handleRegistrationsJson(env) {
     workshop_keys: workshopKeys,
     whatsapp_statuses: ['all', 'pending', 'outreach_sent', 'sent', 'awaiting_reply', 'replied_interested'],
     payment_statuses: ['all', 'pending', 'bit_request_sent', 'paid'],
-    registration_statuses: ['all', 'new', 'registered', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'group_member', 'not_handled', 'lead', 'interested'],
+    registration_statuses: ['all', 'new', 'registered', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'group_member', 'not_handled', 'lead', 'interested', 'waitlist'],
     record_types: ['all', 'lead', 'registration', 'attendee'],
     crm_stages: ['all', 'open', 'awaiting_reply', 'interested', 'closing', 'closed', 'lost'],
   };
 
-  return json({ ok: true, registrations: items, counts, filters }, env);
+  // Build capacity summary comparing KV public status vs D1 paid seats
+  const status = await getStatus(env);
+  const workshop_capacity_summary = {};
+  for (const [key, ws] of Object.entries(status)) {
+    const capacity = Number(ws.capacity || 0);
+    const public_confirmed = Number(ws.confirmed || 0);
+    const wsKey = KV_KEY_TO_WORKSHOP_KEY[key] || key;
+    const paid_seats = paidSeatsByKey[wsKey] || 0;
+    const manual_reserved = Math.max(0, public_confirmed - paid_seats);
+    workshop_capacity_summary[key] = {
+      capacity,
+      public_confirmed,
+      paid_seats,
+      manual_reserved,
+      open: ws.open !== false && public_confirmed < capacity,
+      mismatch: public_confirmed !== paid_seats,
+    };
+  }
+
+  return json({ ok: true, registrations: items, counts, filters, workshop_capacity_summary }, env);
 }
 
 const UPDATE_COLUMN_MAP = Object.freeze({
@@ -466,7 +502,7 @@ const ALLOWED_UPDATE_FIELDS = new Set(Object.keys(UPDATE_COLUMN_MAP));
 const ALLOWED_STATUS_VALUES = Object.freeze({
   whatsapp_status: ['pending', 'outreach_sent', 'sent', 'awaiting_reply', 'replied_interested'],
   payment_status: ['pending', 'bit_request_sent', 'paid'],
-  registration_status: ['new', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'not_handled', 'lead', 'group_member', 'interested', 'registered'],
+  registration_status: ['new', 'confirmed', 'cancelled', 'needs_payment_followup', 'registered_under_shnir', 'not_handled', 'lead', 'group_member', 'interested', 'registered', 'waitlist'],
   is_spam: [0, 1, '0', '1', true, false],
   record_type: ['lead', 'registration', 'attendee'],
   crm_stage: ['open', 'awaiting_reply', 'interested', 'closing', 'closed', 'lost'],
@@ -631,6 +667,20 @@ async function handleRegistrationUpdateMany(request, env) {
   const current = await db.prepare('SELECT * FROM registrations WHERE id = ?').bind(id).first();
   if (!current) {
     return json({ ok: false, error: 'registration not found' }, env, 404);
+  }
+
+  // Paid-as-closed consistency guard:
+  // When payment_status is set to 'paid' for a billable registration (not lead/attendee),
+  // and registration_status is NOT being explicitly changed, auto-set 'confirmed'.
+  if (validated.payment_status?.value === 'paid' && !('registration_status' in validated)) {
+    const curRecordType = current.record_type || recordType(current);
+    const curRegStatus = String(current.registration_status || '');
+    // Only auto-confirm billable registrations (not leads, not attendees, not cancelled/spam)
+    if (curRecordType === 'registration' &&
+        curRegStatus !== 'cancelled' &&
+        Number(current.is_spam) !== 1) {
+      validated.registration_status = { value: 'confirmed' };
+    }
   }
 
   // Build and run a single UPDATE for all changed fields
