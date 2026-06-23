@@ -41,6 +41,19 @@ export const adminClientJs = `
     setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},dur||2000);
   }
 
+  /* ── WhatsApp message helper ────────────────── */
+  function waDraftMessage(reg){
+    const name=reg.name||'';
+    const workshop=reg.edition||reg.workshop||'סדנה';
+    const date=reg.workshop_date?' ב'+reg.workshop_date:'';
+    const amount=reg.amount_ils?reg.amount_ils+'₪':'200₪';
+    return 'היי '+name+', מה שלומך?'+String.fromCharCode(10)+'ראיתי שנרשמת לסדנת חליטות ב'+workshop+date+'.'+String.fromCharCode(10)+'כדי לשמור מקום — אפשר להעביר '+amount+' בביט.';
+  }
+  function waUrlWithMessage(reg){
+    if(!reg.wa_phone)return null;
+    return 'https://wa.me/'+reg.wa_phone+'?text='+encodeURIComponent(waDraftMessage(reg));
+  }
+
   /* ── Status labels (mirrors server) ───────── */
   const SL=Object.freeze({
     whatsapp_status:{pending:'לא נשלחה הודעה',outreach_sent:'נשלחה הודעה',sent:'נשלחה הודעה',awaiting_reply:'ממתין לתשובה',replied_interested:'חזר מעוניין'},
@@ -541,8 +554,9 @@ export const adminClientJs = `
     const r=state.allItems.find(x=>x.id===id);
     if(!r)return;
     if(action==='open_wa'){
-      if(r.wa_phone){
-        window.open('https://wa.me/'+r.wa_phone,'_blank');
+      const url=waUrlWithMessage(r);
+      if(url){
+        window.open(url,'_blank');
       }else{
         showToast('אין מספר טלפון תקין לווטסאפ');
       }
@@ -817,7 +831,7 @@ export const adminClientJs = `
 
       // Lead actions
       if(_rt==='lead'){
-        if(reg.wa_phone)btns+='<button class="details-action-btn secondary" id="det-wa">פתח WhatsApp</button>';
+        if(reg.wa_phone)btns+='<div style="display:flex;gap:4px"><button class="details-action-btn secondary" id="det-wa" style="flex:1">פתח WhatsApp</button><button class="details-action-btn secondary" id="det-wa-copy" style="flex:0 0 auto;padding:10px 12px">📋</button></div>';
         if(waPending){
           btns+='<button class="details-action-btn secondary" id="det-mark-sent" '+(isSaving?'disabled':'')+'>סימנתי הודעה</button>';
         }else if(waAlreadySent){
@@ -839,7 +853,7 @@ export const adminClientJs = `
 
       // Payment actions — only for registration rows (non-lead, non-attendee)
       if(_rt==='registration'){
-        if(reg.wa_phone)btns+='<button class="details-action-btn secondary" id="det-wa">פתח WhatsApp</button>';
+        if(reg.wa_phone)btns+='<div style="display:flex;gap:4px"><button class="details-action-btn secondary" id="det-wa" style="flex:1">פתח WhatsApp</button><button class="details-action-btn secondary" id="det-wa-copy" style="flex:0 0 auto;padding:10px 12px">📋</button></div>';
         if(waPending){
           btns+='<button class="details-action-btn secondary" id="det-mark-sent" '+(isSaving?'disabled':'')+'>סימנתי הודעה</button>';
         }else if(waAlreadySent){
@@ -871,7 +885,15 @@ export const adminClientJs = `
     const id=reg.id;
     document.getElementById('det-wa')?.addEventListener('click',()=>{
       const r=state.allItems.find(x=>x.id===id);
-      if(r&&r.wa_phone)window.open('https://wa.me/'+r.wa_phone,'_blank');
+      const url=r?waUrlWithMessage(r):null;
+      if(url)window.open(url,'_blank');
+      else if(r&&r.wa_phone)window.open('https://wa.me/'+r.wa_phone,'_blank');
+    });
+    document.getElementById('det-wa-copy')?.addEventListener('click',()=>{
+      const r=state.allItems.find(x=>x.id===id);
+      if(!r)return;
+      const msg=waDraftMessage(r);
+      navigator.clipboard.writeText(msg).then(()=>showToast('הודעה הועתקה ✓')).catch(()=>showToast('שגיאה בהעתקה'));
     });
     document.getElementById('det-mark-sent')?.addEventListener('click',()=>callUpdate(id,{whatsapp_status:'outreach_sent'}));
     document.getElementById('det-mark-bit')?.addEventListener('click',()=>callUpdate(id,{payment_status:'bit_request_sent'}));
