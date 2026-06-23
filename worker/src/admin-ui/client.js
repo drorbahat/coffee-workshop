@@ -43,26 +43,39 @@ export const adminClientJs = `
 
   /* ── WhatsApp message helper ────────────────── */
   function waDraftMessage(reg){
-    const name=reg.name||'';
+    const name=(reg.name||'').split(/\s+/)[0]||'שם';
     const rtype=clientRecordType(reg);
-    const isLead=rtype==='lead'||reg.registration_status==='lead'||(reg.workshop_key==='brew_updates'||reg.workshop_key==='espresso_updates');
+    const isLead=rtype==='lead'||reg.registration_status==='lead'||reg.workshop_key==='brew_updates'||reg.workshop_key==='espresso_updates';
 
     if(isLead){
-      // Lead / update subscriber — no workshop booked yet
-      if(reg.workshop_key==='espresso_updates') return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת אספרסו.';
-      return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת חליטות.';
+      if(reg.workshop_key==='espresso_updates') return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת אספרסו.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
+      return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת חליטות.'+String.fromCharCode(10)+String.fromCharCode(10)+'כל שאלה — אני כאן.';
     }
 
-    // Real registration — build message from actual fields
     const edition=reg.edition||'';
-    const workshop=reg.workshop||'';
-    // Clean workshop display: prefer workshop name, strip "עדכונים" prefix
-    let wsName=workshop||edition||'הסדנה';
-    if(wsName.startsWith('עדכונים — ')) wsName=wsName.slice(9);
-    const date=reg.workshop_date?' ב'+reg.workshop_date:'';
-    const amount=reg.amount_ils?reg.amount_ils+'₪':'';
-    let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+'ראיתי שנרשמת ל'+wsName+date+'.';
-    if(amount) msg+=String.fromCharCode(10)+'כדי לשמור מקום — אפשר להעביר '+amount+' בביט.';
+    const date=reg.workshop_date||reg.date||'';
+    const amount=reg.amount_ils;
+    const seats=reg.seats||1;
+    const isGroup=seats>1;
+
+    const isURU=edition.includes('URU')||edition.includes('עורו')||edition.includes('תל אביב');
+    const isKanopi=edition.includes('קנופי')||edition.includes('ירושלים');
+
+    let venue='';
+    if(isURU) venue='בעורו בתל אביב, הכישור 1 ביתן 107';
+    else if(isKanopi) venue='בקנופי בירושלים, מבוא המתמיד 6';
+
+    let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+String.fromCharCode(10);
+    if(isURU||isKanopi) msg+='ראיתי שנרשמת לסדנת החליטות '+venue+(date?', '+date:'')+'.'+String.fromCharCode(10);
+    else msg+='תודה שנרשמת לסדנת הקפה'+(date?' ב'+date:'')+'!'+String.fromCharCode(10);
+
+    if(amount){
+      const total=amount*seats;
+      msg+=String.fromCharCode(10)+'כדי לשמור '+(isGroup?'מקומות':'מקום')+', אפשר להעביר ביט על סך '+total+' ש״ח'+(isGroup?' ('+seats+' מקומות × ₪'+amount+')':'')+'.'+String.fromCharCode(10);
+    }else{
+      msg+=String.fromCharCode(10)+'מחכה לראות אותך בסדנה!'+String.fromCharCode(10);
+    }
+    msg+=String.fromCharCode(10)+'כל שאלה — אני כאן.';
     return msg;
   }
   function waUrlWithMessage(reg){
