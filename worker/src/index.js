@@ -657,7 +657,7 @@ async function handleWorkshopSettings(env) {
       { id: 'capacity', label: 'קיבולת (מקומות)', value: current.capacity || 8 },
     ];
     return `<form class="ws-form" data-key="${escapeHtml(key)}">
-      <h2>${escapeHtml(current.workshop_type||key)} — ${escapeHtml(current.venue||'')}</h2>
+      <h2>${escapeHtml((current.venue||'סדנה')+' — '+(current.workshop_type||'')+' — '+(current.date_label||''))}</h2>
       ${fields.map(f => {
         if(f.html) return f.html;
         return `<label>${escapeHtml(f.label)}
@@ -711,7 +711,7 @@ document.querySelectorAll('.ws-form').forEach(f=>{
     try{
       const r=await fetch('/admin/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
       const d=await r.json();
-      if(d.ok){msg.textContent='נשמר ✓';msg.className='ws-msg ok'}
+      if(d.ok){msg.textContent='נשמר ✓, מרענן...';msg.className='ws-msg ok';setTimeout(()=>location.reload(),600)}
       else{msg.textContent='שגיאה: '+(d.error||'')}
     }catch(err){msg.textContent='שגיאת רשת';msg.className='ws-msg err'}
     btn.disabled=false;
