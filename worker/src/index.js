@@ -145,8 +145,7 @@ export default {
 
     if (url.pathname === '/' || url.pathname === '/admin') {
       if (request.method === 'GET') {
-        const authed = await isAuthed(request, env);
-        return html(authed ? adminPage() : loginPage(), env);
+        return Response.redirect('/admin/registrations', 302);
       }
     }
 
