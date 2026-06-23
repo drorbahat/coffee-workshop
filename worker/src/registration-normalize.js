@@ -23,6 +23,7 @@ export const STATUS_LABELS = Object.freeze({
     group_member: 'כלול בהרשמה קבוצתית',
     interested: 'מעוניין',
     registered: 'נרשם',
+    waitlist: 'רשימת המתנה',
   },
   crm_stage: {
     open: 'פתוח',
@@ -82,6 +83,9 @@ export function computeLane(row) {
   if (row.payment_status === 'paid') return 'closed';
   if (row.payment_status === 'bit_request_sent') return 'waiting_payment';
 
+  // Explicit waitlist → dedicated lane
+  if (row.registration_status === 'waitlist') return 'waitlist';
+
   if (recordType(row) === 'lead') {
     if (row.registration_status === 'interested' || row.crm_stage === 'interested') return 'needs_closing';
     if (row.whatsapp_status === 'pending') return 'needs_action';
@@ -120,9 +124,71 @@ export function normalizePhoneForWa(phone) {
 // Full normalization that adds computed fields
 export function normalizeRegistration(row) {
   const gm = isGroupMember(row);
+  const lane = computeLane(row);
+
+  // Compute a human-readable primary display status
+  let display_status;
+  let display_status_tone = 'neutral';
+
+  if (Number(row.is_spam) === 1) {
+    display_status = 'ספאם';
+    display_status_tone = 'error';
+  } else if (row.registration_status === 'cancelled') {
+    display_status = 'בוטל';
+    display_status_tone = 'muted';
+  } else if (gm) {
+    display_status = 'כלול בהרשמה';
+    display_status_tone = 'info';
+  } else if (row.registration_status === 'waitlist') {
+    display_status = 'רשימת המתנה';
+    display_status_tone = 'info';
+  } else if (row.payment_status === 'paid' && isBillableRow(row)) {
+    // Billable paid rows show as closed/paid regardless of registration_status
+    display_status = 'שולם';
+    display_status_tone = 'success';
+  } else if (recordType(row) === 'lead') {
+    // Leads show granular state based on whatsapp/crm status
+    if (row.whatsapp_status === 'pending') {
+      display_status = 'צריך הודעה';
+      display_status_tone = 'action';
+    } else if (row.registration_status === 'interested' || row.crm_stage === 'interested') {
+      display_status = 'מעוניין';
+      display_status_tone = 'positive';
+    } else if (row.whatsapp_status === 'awaiting_reply') {
+      display_status = 'מחכה לתשובה';
+      display_status_tone = 'pending';
+    } else if (lane === 'open_leads') {
+      display_status = 'מחכה לתשובה';
+      display_status_tone = 'pending';
+    } else if (lane === 'needs_closing') {
+      display_status = 'בסגירה';
+      display_status_tone = 'warning';
+    } else {
+      display_status = statusLabel('registration_status', row.registration_status);
+      display_status_tone = 'pending';
+    }
+  } else if (row.payment_status === 'bit_request_sent') {
+    display_status = 'מחכה לתשלום';
+    display_status_tone = 'warning';
+  } else if (lane === 'needs_action') {
+    display_status = 'צריך הודעה';
+    display_status_tone = 'action';
+  } else if (lane === 'open_leads') {
+    display_status = 'מחכה לתשובה';
+    display_status_tone = 'pending';
+  } else if (lane === 'needs_closing') {
+    display_status = 'בסגירה';
+    display_status_tone = 'warning';
+  } else if (lane === 'closed') {
+    display_status = 'סגור';
+    display_status_tone = 'muted';
+  } else {
+    display_status = statusLabel('registration_status', row.registration_status);
+  }
+
   return {
     ...row,
-    lane: computeLane(row),
+    lane,
     workshop_key: workshopKey(row),
     whatsapp_label: statusLabel('whatsapp_status', row.whatsapp_status),
     payment_label: gm
@@ -130,7 +196,11 @@ export function normalizeRegistration(row) {
         ? `כלול בהרשמה #${row.parent_registration_id}`
         : 'כלול בהרשמה')
       : statusLabel('payment_status', row.payment_status),
-    registration_label: statusLabel('registration_status', row.registration_status),
+    registration_label: (row.payment_status === 'paid' && isBillableRow(row))
+      ? 'שולם'
+      : statusLabel('registration_status', row.registration_status),
+    display_status,
+    display_status_tone,
     wa_phone: normalizePhoneForWa(row.phone),
     _is_group_member: gm,
   };

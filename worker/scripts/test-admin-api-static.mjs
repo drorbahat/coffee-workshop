@@ -189,8 +189,8 @@ assert(migrateSrc.includes('--json'), 'migrate script uses --json flag for schem
 assert(migrateSrc.includes('results'), 'migrate script parses PRAGMA JSON results array');
 assert(migrateSrc.includes('row.name'), 'migrate script reads column names from parsed JSON objects');
 
-/* ───── 15. Verify isBillableRow imported from registration-normalize ───── */
-assert(src.includes("import { normalizeRegistration, isBillableRow } from"), 'index.js imports isBillableRow');
+/* ───── 15. Verify isBillableRow and recordType imported from registration-normalize ───── */
+assert(src.includes("import { normalizeRegistration, isBillableRow, recordType } from"), 'index.js imports isBillableRow and recordType');
 
 /* ───── 16. Verify nullable field handling in validateAndCoerceUpdate ───── */
 assert(src.includes('NULLABLE_FIELDS'), 'validateAndCoerceUpdate has NULLABLE_FIELDS set');
@@ -203,6 +203,70 @@ assert(src.includes("'notes'"), 'NULLABLE_FIELDS includes notes');
 assert(src.includes("rawValue === null || rawValue === undefined || rawValue === ''"), 'nullable early-exit guards before allowedValues check');
 assert(src.includes('NULLABLE_FIELDS.has(field)'), 'nullable check uses NULLABLE_FIELDS.has(field)');
 assert(src.includes('return { value: null }'), 'nullable early-exit returns value null');
+
+/* ───── 17. Sprint 2: waitlist support ───── */
+
+// 17a. waitlist in filters
+assert(src.includes("'waitlist'"), 'filters.registration_statuses includes waitlist');
+
+// 17b. waitlist in ALLOWED_STATUS_VALUES
+const regStatusIdx = src.indexOf("registration_status: ['new'");
+const regStatusLine = src.slice(regStatusIdx, regStatusIdx + 200).split('\n')[0];
+assert(regStatusLine.includes("'waitlist'"), 'ALLOWED_STATUS_VALUES.registration_status includes waitlist');
+
+// 17c. waitlist count
+assert(src.includes("waitlist: items.filter(r => r.lane === 'waitlist').length"), 'counts includes waitlist lane count');
+
+/* ───── 18. Sprint 2: workshop_capacity_summary ───── */
+
+// 18a. workshop_capacity_summary in response
+assert(src.includes('workshop_capacity_summary'), 'JSON response includes workshop_capacity_summary');
+
+// 18b. capacity summary fields
+const summaryStart = src.indexOf('workshop_capacity_summary');
+const summarySection = src.slice(summaryStart, summaryStart + 600);
+assert(summarySection.includes('capacity'), 'workshop_capacity_summary includes capacity');
+assert(summarySection.includes('public_confirmed'), 'workshop_capacity_summary includes public_confirmed');
+assert(summarySection.includes('paid_seats'), 'workshop_capacity_summary includes paid_seats');
+assert(summarySection.includes('manual_reserved'), 'workshop_capacity_summary includes manual_reserved');
+assert(summarySection.includes('mismatch'), 'workshop_capacity_summary includes mismatch');
+assert(summarySection.includes('Math.max(0, public_confirmed - paid_seats)'), 'workshop_capacity_summary manual_reserved = max(0, public_confirmed - paid_seats)');
+
+// 18c. Uses getStatus for KV data
+assert(src.includes('await getStatus(env)'), 'workshop_capacity_summary fetches KV status via getStatus');
+
+// 18d. KV key to workshop_key mapping
+assert(src.includes('KV_KEY_TO_WORKSHOP_KEY'), 'KV_KEY_TO_WORKSHOP_KEY mapping exists');
+assert(src.includes('filter_2026_06_15'), 'KV_KEY_TO_WORKSHOP_KEY mentions filter_2026_06_15');
+assert(src.includes('kanopi'), 'KV_KEY_TO_WORKSHOP_KEY mentions kanopi');
+assert(src.includes('uru_2026_07_03'), 'KV_KEY_TO_WORKSHOP_KEY mentions uru_2026_07_03');
+assert(src.includes('paidSeatsByKey[wsKey]'), 'capacity summary uses mapped wsKey for paidSeatsByKey lookup');
+
+/* ───── 19. Sprint 2: paid-as-closed consistency guard in update-many ───── */
+
+// 19a. Guard comment and logic
+assert(src.includes('Paid-as-closed consistency guard'), 'update-many has paid-as-closed guard comment');
+assert(src.includes("validated.payment_status?.value === 'paid' && !('registration_status' in validated)"), 'guard fires when payment_status=paid without explicit registration_status change');
+
+// 19b. recordType imported
+assert(src.includes("import { normalizeRegistration, isBillableRow, recordType } from"), 'index.js imports recordType');
+
+/* ───── 20. Sprint 2: display_status / display_status_tone in normalize output ───── */
+const NORM_PATH = resolve(__dirname, '..', 'src', 'registration-normalize.js');
+const normSrc = readFileSync(NORM_PATH, 'utf-8');
+
+// 20a. display_status and display_status_tone fields
+assert(normSrc.includes('display_status'), 'normalizeRegistration returns display_status');
+assert(normSrc.includes('display_status_tone'), 'normalizeRegistration returns display_status_tone');
+
+// 20b. Paid override for billable rows
+assert(normSrc.includes("row.payment_status === 'paid' && isBillableRow(row)"), 'normalizeRegistration checks paid+isBillableRow for display override');
+
+// 20c. waitlist label
+assert(normSrc.includes("waitlist: 'רשימת המתנה'"), 'STATUS_LABELS.registration_status includes waitlist');
+
+// 20d. waitlist lane in computeLane
+assert(normSrc.includes("row.registration_status === 'waitlist'"), 'computeLane checks for waitlist status');
 
 /* ───── Summary ───── */
 const total = passed + failed;

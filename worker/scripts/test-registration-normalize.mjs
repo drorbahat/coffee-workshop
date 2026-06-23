@@ -377,6 +377,83 @@ const resultD = waDraftMessage({
 assert(resultD.message.includes('קנופי'), 'waDraftMessage: Kanopi venue mentioned');
 assert(resultD.message.includes('מבוא המתמיד'), 'waDraftMessage: Kanopi address mentioned');
 
+/* ───── Sprint 2: waitlist ───── */
+
+// 7a. waitlist statusLabel
+assertEq(statusLabel('registration_status', 'waitlist'), 'רשימת המתנה', 'statusLabel: waitlist → רשימת המתנה');
+
+// 7b. computeLane: waitlist registration → waitlist lane
+assertEq(computeLane({ registration_status: 'waitlist', payment_status: 'pending', whatsapp_status: 'pending', is_spam: '0' }), 'waitlist', 'computeLane: waitlist → waitlist');
+
+// 7c. computeLane: waitlist + paid → closed (paid wins)
+assertEq(computeLane({ registration_status: 'waitlist', payment_status: 'paid', whatsapp_status: 'pending', is_spam: '0' }), 'closed', 'computeLane: waitlist + paid → closed (paid wins)');
+
+// 7d. computeLane: waitlist + bit_request_sent → waiting_payment (payment wins)
+assertEq(computeLane({ registration_status: 'waitlist', payment_status: 'bit_request_sent', whatsapp_status: 'pending', is_spam: '0' }), 'waiting_payment', 'computeLane: waitlist + bit_request_sent → waiting_payment');
+
+// 7e. normalizeRegistration with waitlist
+const wlRow = normalizeRegistration({ id: 100, name: 'אבי', phone: '0541111111', registration_status: 'waitlist', payment_status: 'pending', whatsapp_status: 'pending', is_spam: '0' });
+assertEq(wlRow.lane, 'waitlist', 'normalizeRegistration: waitlist lane');
+assertEq(wlRow.display_status, 'רשימת המתנה', 'normalizeRegistration: waitlist display_status');
+assertEq(wlRow.display_status_tone, 'info', 'normalizeRegistration: waitlist display_status_tone');
+assertEq(wlRow.registration_label, 'רשימת המתנה', 'normalizeRegistration: waitlist registration_label');
+
+/* ───── Sprint 2: paid-as-closed display consistency ───── */
+
+// 8a. billable registration paid 'new' → registration_label shows 'שולם'
+const paidNew = normalizeRegistration({
+  id: 200, name: 'דן', phone: '0542222222',
+  registration_status: 'new', payment_status: 'paid', whatsapp_status: 'sent',
+  edition: 'URU', is_spam: '0',
+});
+assertEq(paidNew.lane, 'closed', 'normalizeRegistration: paid+new → lane closed');
+assertEq(paidNew.registration_label, 'שולם', 'normalizeRegistration: paid+new → registration_label שולם');
+assertEq(paidNew.display_status, 'שולם', 'normalizeRegistration: paid+new → display_status שולם');
+assertEq(paidNew.display_status_tone, 'success', 'normalizeRegistration: paid+new → display_status_tone success');
+
+// 8b. lead + paid → should NOT show as "שולם" (leads aren't billable)
+const leadPaid = normalizeRegistration({
+  id: 201, name: 'ליד', phone: '0543333333',
+  registration_status: 'lead', payment_status: 'paid', whatsapp_status: 'sent',
+  is_spam: '0',
+});
+assertEq(leadPaid.registration_label, 'ליד לעדכונים', 'normalizeRegistration: lead+paid → registration_label still lead (not billable)');
+assertEq(leadPaid.display_status, 'ליד לעדכונים', 'normalizeRegistration: lead+paid → display_status ליד לעדכונים (leads not overridden by lane)');
+
+// 8c. attendee + paid → still shows included
+const attendeePaid = normalizeRegistration({
+  id: 202, name: 'משתתף', phone: '0544444444',
+  registration_status: 'group_member', payment_status: 'paid', whatsapp_status: 'pending',
+  record_type: 'attendee', parent_registration_id: 200, is_spam: '0',
+});
+assertEq(attendeePaid.registration_label, 'כלול בהרשמה קבוצתית', 'normalizeRegistration: attendee+paid → registration_label still group');
+assertEq(attendeePaid.display_status, 'כלול בהרשמה', 'normalizeRegistration: attendee+paid → display_status included');
+
+// 8d. cancelled + paid → still cancelled
+const cancelledPaid = normalizeRegistration({
+  id: 203, name: 'מבוטל', phone: '0545555555',
+  registration_status: 'cancelled', payment_status: 'paid', whatsapp_status: 'pending',
+  is_spam: '0', edition: 'URU',
+});
+assertEq(cancelledPaid.display_status, 'בוטל', 'normalizeRegistration: cancelled+paid → display_status בוטל');
+
+/* ───── Sprint 2: display_status/display_status_tone on existing lanes ───── */
+
+// 9a. needs_action lane → display_status
+const needsAct = normalizeRegistration({ id: 300, name: 'צריך', phone: '0546666666', registration_status: 'new', payment_status: 'pending', whatsapp_status: 'pending', edition: 'URU', is_spam: '0' });
+assertEq(needsAct.display_status, 'צריך הודעה', 'normalizeRegistration: needs_action → display_status צריך הודעה');
+assertEq(needsAct.display_status_tone, 'action', 'normalizeRegistration: needs_action → tone action');
+
+// 9b. open_leads lane → display_status
+const openLead = normalizeRegistration({ id: 301, name: 'ליד ממתין', phone: '0547777777', registration_status: 'lead', payment_status: 'pending', whatsapp_status: 'sent', is_spam: '0' });
+assertEq(openLead.display_status, 'מחכה לתשובה', 'normalizeRegistration: open_leads → display_status מחכה לתשובה');
+assertEq(openLead.display_status_tone, 'pending', 'normalizeRegistration: open_leads → tone pending');
+
+// 9c. waiting_payment lane → display_status
+const waitPay = normalizeRegistration({ id: 302, name: 'מחכה תשלום', phone: '0548888888', registration_status: 'new', payment_status: 'bit_request_sent', whatsapp_status: 'sent', edition: 'URU', is_spam: '0' });
+assertEq(waitPay.display_status, 'מחכה לתשלום', 'normalizeRegistration: waiting_payment → display_status מחכה לתשלום');
+assertEq(waitPay.display_status_tone, 'warning', 'normalizeRegistration: waiting_payment → tone warning');
+
 /* ───── Summary ───── */
 
 const total = passed + failed;
