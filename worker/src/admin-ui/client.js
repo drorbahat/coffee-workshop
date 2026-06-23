@@ -44,10 +44,26 @@ export const adminClientJs = `
   /* ── WhatsApp message helper ────────────────── */
   function waDraftMessage(reg){
     const name=reg.name||'';
-    const workshop=reg.edition||reg.workshop||'סדנה';
+    const rtype=clientRecordType(reg);
+    const isLead=rtype==='lead'||reg.registration_status==='lead'||(reg.workshop_key==='brew_updates'||reg.workshop_key==='espresso_updates');
+
+    if(isLead){
+      // Lead / update subscriber — no workshop booked yet
+      if(reg.workshop_key==='espresso_updates') return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת אספרסו.';
+      return 'היי '+name+', תודה שנרשמת לעדכונים!'+String.fromCharCode(10)+'אעדכן אותך כשייפתח מועד לסדנת חליטות.';
+    }
+
+    // Real registration — build message from actual fields
+    const edition=reg.edition||'';
+    const workshop=reg.workshop||'';
+    // Clean workshop display: prefer workshop name, strip "עדכונים" prefix
+    let wsName=workshop||edition||'הסדנה';
+    if(wsName.startsWith('עדכונים — ')) wsName=wsName.slice(9);
     const date=reg.workshop_date?' ב'+reg.workshop_date:'';
-    const amount=reg.amount_ils?reg.amount_ils+'₪':'200₪';
-    return 'היי '+name+', מה שלומך?'+String.fromCharCode(10)+'ראיתי שנרשמת לסדנת חליטות ב'+workshop+date+'.'+String.fromCharCode(10)+'כדי לשמור מקום — אפשר להעביר '+amount+' בביט.';
+    const amount=reg.amount_ils?reg.amount_ils+'₪':'';
+    let msg='היי '+name+', מה שלומך?'+String.fromCharCode(10)+'ראיתי שנרשמת ל'+wsName+date+'.';
+    if(amount) msg+=String.fromCharCode(10)+'כדי לשמור מקום — אפשר להעביר '+amount+' בביט.';
+    return msg;
   }
   function waUrlWithMessage(reg){
     if(!reg.wa_phone)return null;
